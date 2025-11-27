@@ -22,7 +22,7 @@ interface HandleMessageUploadParams {
   sender_id: number;
   receiver_id: number;
   message?: string;
-  files: FileUpload[] | undefined;
+  files?: FileUpload[];
 }
 
 const allowedRoles: (typeof ROLE)[keyof typeof ROLE][] = [
@@ -78,7 +78,7 @@ export const contactAgency: RequestHandler = async (request: Request, res: Respo
       sender_id,
       receiver_id,
       message,
-      files: uploadedFiles,
+      files: uploadedFiles!,
     };
 
     const newMessage = (await handleMessageUpload(connection, params)) as RowDataPacket;
