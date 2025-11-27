@@ -29,7 +29,7 @@ try {
     database: process.env.DB_NAME!,
     port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: 5,
     queueLimit: 0,
   });
 
