@@ -1,15 +1,15 @@
-import nodemailer from "nodemailer";
-import logger from "../../../config/logger.js";
+import nodemailer from 'nodemailer';
+import logger from '../../../config/logger.js';
 
 const { EMAIL_USER, EMAIL_PASS, CLIENT_ORIGIN } = process.env;
 
 if (!EMAIL_USER || !EMAIL_PASS) {
-  logger.error("Missing email credentials");
+  logger.error('Missing email credentials');
   process.exit(1);
 }
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: 'gmail',
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
@@ -32,7 +32,6 @@ export async function sendUserEmail(to: string, subject: string, htmlContent: st
     logger.error(`Failed to send email to ${to}`, { error });
   }
 }
-
 
 const baseStyles = `
 <style>

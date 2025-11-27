@@ -16,7 +16,6 @@ export async function createJobApplicationsTable(connection: Pool | PoolConnecti
   try {
     await connection.execute(query);
   } catch (error) {
-    throw error; 
+    throw error;
   }
 }
-

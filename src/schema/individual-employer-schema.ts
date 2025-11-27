@@ -20,7 +20,6 @@ export async function createIndividualEmployerTable(connection: Pool | PoolConne
   try {
     await connection.execute(query);
   } catch (error) {
-    throw error; 
+    throw error;
   }
 }
-

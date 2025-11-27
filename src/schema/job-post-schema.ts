@@ -92,4 +92,3 @@ export async function createTeamJobPostTable(connection: Pool | PoolConnection) 
     throw error;
   }
 }
-

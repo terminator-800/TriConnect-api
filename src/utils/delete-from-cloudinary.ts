@@ -1,5 +1,5 @@
-import cloudinary from "../config/cloudinary.js";
-import logger from "../config/logger.js";
+import cloudinary from '../config/cloudinary.js';
+import logger from '../config/logger.js';
 
 export const deleteFromCloudinary = async (publicId: string) => {
   try {
@@ -8,14 +8,14 @@ export const deleteFromCloudinary = async (publicId: string) => {
 
     return result;
   } catch (error: any) {
-    logger.error("Failed to delete Cloudinary file", {
+    logger.error('Failed to delete Cloudinary file', {
       publicId,
-      name: error?.name || "UnknownError",
-      message: error?.message || "Unknown error",
-      stack: error?.stack || "No stack trace",
-      cause: error?.cause || "No cause",
+      name: error?.name || 'UnknownError',
+      message: error?.message || 'Unknown error',
+      stack: error?.stack || 'No stack trace',
+      cause: error?.cause || 'No cause',
       error,
     });
-    throw new Error("Failed to delete file from Cloudinary.");
+    throw new Error('Failed to delete file from Cloudinary.');
   }
 };

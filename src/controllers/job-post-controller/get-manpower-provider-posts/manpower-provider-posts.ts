@@ -1,10 +1,10 @@
-import { formatDistanceToNow } from "date-fns";
-import type { PoolConnection, RowDataPacket } from "mysql2/promise";
-import type { Response } from "express";
-import type { CustomRequest } from "../../../types/express/auth.js";
-import { ROLE } from "../../../utils/roles.js";
-import pool from "../../../config/database-connection.js";
-import logger from "../../../config/logger.js";
+import { formatDistanceToNow } from 'date-fns';
+import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
+import type { Response } from 'express';
+import type { CustomRequest } from '../../../types/express/auth.js';
+import { ROLE } from '../../../utils/roles.js';
+import pool from '../../../config/database-connection.js';
+import logger from '../../../config/logger.js';
 
 // ------------------ Types ------------------
 
@@ -47,8 +47,8 @@ export interface TeamJobPostRow extends RowDataPacket {
 }
 
 export type FlattenedMPJobPost =
-  | ({ type: "individual" } & IndividualJobPostRow)
-  | ({ type: "team" } & TeamJobPostRow);
+  | ({ type: 'individual' } & IndividualJobPostRow)
+  | ({ type: 'team' } & TeamJobPostRow);
 
 // ------------------ Service ------------------
 
@@ -58,7 +58,8 @@ export async function getUnappliedMPJobPosts(
 ): Promise<FlattenedMPJobPost[]> {
   try {
     // Individual job posts
-    const [individualRows] = await connection.query<IndividualJobPostRow[]>(`
+    const [individualRows] = await connection.query<IndividualJobPostRow[]>(
+      `
       SELECT i.*, mp.agency_name, mp.agency_address, mp.agency_services, mp.agency_authorized_person
       FROM individual_job_post i
       JOIN users u ON i.user_id = u.user_id
@@ -70,10 +71,13 @@ export async function getUnappliedMPJobPosts(
           SELECT job_post_id FROM job_applications WHERE applicant_id = ?
         )
       ORDER BY i.created_at DESC
-    `, [employer_id, employer_id]);
+    `,
+      [employer_id, employer_id]
+    );
 
     // Team job posts
-    const [teamRows] = await connection.query<TeamJobPostRow[]>(`
+    const [teamRows] = await connection.query<TeamJobPostRow[]>(
+      `
       SELECT t.*, mp.agency_name, mp.agency_address, mp.agency_services, mp.agency_authorized_person
       FROM team_job_post t
       JOIN users u ON t.user_id = u.user_id
@@ -85,32 +89,33 @@ export async function getUnappliedMPJobPosts(
           SELECT job_post_id FROM job_applications WHERE applicant_id = ?
         )
       ORDER BY t.created_at DESC
-    `, [employer_id, employer_id]);
+    `,
+      [employer_id, employer_id]
+    );
 
     // Flatten and format relative time for created_at
     return [
-      ...individualRows.map((r) => ({
+      ...(individualRows.map((r) => ({
         ...r,
-        type: "individual",
+        type: 'individual',
         created_at: r.created_at
           ? formatDistanceToNow(new Date(r.created_at), { addSuffix: true })
           : null,
         approved_at: r.approved_at
           ? formatDistanceToNow(new Date(r.approved_at), { addSuffix: true })
           : null,
-      })) as FlattenedMPJobPost[],
-      ...teamRows.map((r) => ({
+      })) as FlattenedMPJobPost[]),
+      ...(teamRows.map((r) => ({
         ...r,
-        type: "team",
+        type: 'team',
         created_at: r.created_at
           ? formatDistanceToNow(new Date(r.created_at), { addSuffix: true })
           : null,
         approved_at: r.approved_at
           ? formatDistanceToNow(new Date(r.approved_at), { addSuffix: true })
           : null,
-      })) as FlattenedMPJobPost[],
+      })) as FlattenedMPJobPost[]),
     ];
-
   } catch (error) {
     throw error;
   }
@@ -130,20 +135,24 @@ export const getAgencyPostsController = async (
     const role = req.user?.role;
 
     if (!employer_id || (role !== ROLE.BUSINESS_EMPLOYER && role !== ROLE.INDIVIDUAL_EMPLOYER)) {
-      res.status(403).json({ error: "Forbidden: Only business or individual employers can access this endpoint" });
+      res
+        .status(403)
+        .json({
+          error: 'Forbidden: Only business or individual employers can access this endpoint',
+        });
       return;
     }
 
     const jobPosts = await getUnappliedMPJobPosts(connection, employer_id);
     res.status(200).json(jobPosts);
   } catch (error: any) {
-    logger.error("Failed to fetch unapplied manpower provider job posts", {
+    logger.error('Failed to fetch unapplied manpower provider job posts', {
       name: error?.name,
       message: error?.message,
       stack: error?.stack,
       ip: req.ip,
     });
-    res.status(500).json({ error: "Failed to fetch job posts" });
+    res.status(500).json({ error: 'Failed to fetch job posts' });
   } finally {
     if (connection) connection.release();
   }

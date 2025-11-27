@@ -1,4 +1,4 @@
-import type { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import type { PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 
 // Feedback row type
 interface FeedbackRow extends RowDataPacket {
@@ -24,7 +24,6 @@ export async function hasSubmittedFeedback(
     throw error;
   }
 }
-
 
 /**
  * Saves a new feedback entry and returns the saved feedback row.

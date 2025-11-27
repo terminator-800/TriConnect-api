@@ -1,6 +1,6 @@
-import type { PoolConnection, RowDataPacket } from "mysql2/promise";
-import { Server, Socket } from "socket.io";
-import pool from "./database-connection.js";
+import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
+import { Server, Socket } from 'socket.io';
+import pool from './database-connection.js';
 
 type UserSocketMap = Record<number, string>;
 
@@ -30,7 +30,7 @@ function initializeSocket(server: any, userSocketMap: UserSocketMap) {
   const io = new Server(server, {
     cors: {
       origin: process.env.CLIENT_ORIGIN,
-      methods: ["GET", "POST"],
+      methods: ['GET', 'POST'],
       credentials: true,
     },
   });
@@ -44,26 +44,24 @@ function initializeSocket(server: any, userSocketMap: UserSocketMap) {
     }
   };
 
-  io.on("connection", (socket: Socket) => {
-
-    socket.on("joinRoom", (roomId: string | number) => {
+  io.on('connection', (socket: Socket) => {
+    socket.on('joinRoom', (roomId: string | number) => {
       if (!roomId) return socket.join(roomId.toString());
     });
 
-    socket.on("leaveRoom", (roomId: string | number) => {
+    socket.on('leaveRoom', (roomId: string | number) => {
       if (!roomId) return socket.leave(roomId.toString());
     });
 
-    socket.on("register", (user_id: number) => {
+    socket.on('register', (user_id: number) => {
       if (userSocketMap[user_id] && userSocketMap[user_id] !== socket.id) {
-
       }
       userSocketMap[user_id] = socket.id;
       sendQueuedMessages(user_id, socket);
     });
-    
+
     socket.on(
-      "markMessagesSeen",
+      'markMessagesSeen',
       async (
         data: { conversation_id: number; user_id: number },
         callback?: (res: { success: boolean; error?: string }) => void
@@ -76,17 +74,17 @@ function initializeSocket(server: any, userSocketMap: UserSocketMap) {
             );
           });
 
-          socket.to(data.conversation_id.toString()).emit("messagesSeen", data);
-          io.emit("messagesSeen", data);
+          socket.to(data.conversation_id.toString()).emit('messagesSeen', data);
+          io.emit('messagesSeen', data);
 
           if (callback) callback({ success: true });
         } catch (err: any) {
-          if (callback) callback({ success: false, error: "Unable to mark messages as seen" });
+          if (callback) callback({ success: false, error: 'Unable to mark messages as seen' });
         }
       }
     );
 
-    socket.on("disconnect", () => {
+    socket.on('disconnect', () => {
       const disconnectedUserId = Object.keys(userSocketMap).find(
         (key) => userSocketMap[Number(key)] === socket.id
       );
@@ -94,7 +92,6 @@ function initializeSocket(server: any, userSocketMap: UserSocketMap) {
       if (disconnectedUserId) {
         delete userSocketMap[Number(disconnectedUserId)];
       } else {
-
       }
     });
   });
@@ -115,7 +112,7 @@ function initializeSocket(server: any, userSocketMap: UserSocketMap) {
         for (const message of messages) {
           try {
             const [userResult] = await conn.query<RowDataPacket[]>(
-              "SELECT role FROM users WHERE user_id = ?",
+              'SELECT role FROM users WHERE user_id = ?',
               [message.sender_id]
             );
 
@@ -124,49 +121,50 @@ function initializeSocket(server: any, userSocketMap: UserSocketMap) {
               let tableName: string;
 
               switch (senderRole) {
-                case "jobseeker":
-                  tableName = "jobseeker";
+                case 'jobseeker':
+                  tableName = 'jobseeker';
                   break;
-                case "business-employer":
-                  tableName = "business_employer";
+                case 'business-employer':
+                  tableName = 'business_employer';
                   break;
-                case "individual-employer":
-                  tableName = "individual_employer";
+                case 'individual-employer':
+                  tableName = 'individual_employer';
                   break;
-                case "manpower-provider":
-                  tableName = "manpower_provider";
+                case 'manpower-provider':
+                  tableName = 'manpower_provider';
                   break;
-                case "administrator":
-                  tableName = "administrators";
+                case 'administrator':
+                  tableName = 'administrators';
                   break;
                 default:
-                  tableName = "users";
+                  tableName = 'users';
               }
 
               const [nameResult] = await conn.query<RowDataPacket[]>(
-                `SELECT full_name FROM ${tableName} WHERE ${tableName === "jobseeker"
-                  ? "jobseeker_id"
-                  : tableName === "business_employer"
-                    ? "business_employer_id"
-                    : tableName === "individual_employer"
-                      ? "individual_employer_id"
-                      : tableName === "manpower_provider"
-                        ? "manpower_provider_id"
-                        : "user_id"
+                `SELECT full_name FROM ${tableName} WHERE ${
+                  tableName === 'jobseeker'
+                    ? 'jobseeker_id'
+                    : tableName === 'business_employer'
+                      ? 'business_employer_id'
+                      : tableName === 'individual_employer'
+                        ? 'individual_employer_id'
+                        : tableName === 'manpower_provider'
+                          ? 'manpower_provider_id'
+                          : 'user_id'
                 } = ?`,
                 [message.sender_id]
               );
 
               message.sender_name =
-                nameResult.length > 0 ? nameResult[0]!.full_name : "Unknown User";
+                nameResult.length > 0 ? nameResult[0]!.full_name : 'Unknown User';
             } else {
-              message.sender_name = "Unknown User";
+              message.sender_name = 'Unknown User';
             }
           } catch (error: any) {
-            message.sender_name = "Unknown User";
+            message.sender_name = 'Unknown User';
           }
 
-          socket.emit("receiveMessage", message);
+          socket.emit('receiveMessage', message);
         }
       });
     } catch (err) {
@@ -175,14 +173,14 @@ function initializeSocket(server: any, userSocketMap: UserSocketMap) {
   };
 
   const emitGlobalMessage: EmitGlobalMessage = (message) => {
-    io.to(message.conversation_id.toString()).emit("receiveMessage", message);
-    io.emit("receiveMessage", message);
+    io.to(message.conversation_id.toString()).emit('receiveMessage', message);
+    io.emit('receiveMessage', message);
 
     const conversationUpdate: ConversationUpdate = {
       conversation_id: message.conversation_id,
       last_message: message,
     };
-    io.emit("conversationUpdate", conversationUpdate);
+    io.emit('conversationUpdate', conversationUpdate);
   };
 
   // Attach emitGlobalMessage to io object

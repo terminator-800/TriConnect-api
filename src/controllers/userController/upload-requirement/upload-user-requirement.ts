@@ -1,12 +1,12 @@
-import type { Request, Response } from "express";
-import { uploadUserRequirement } from "./insert-requirement.js";
-import type { PoolConnection } from "mysql2/promise";
-import { uploadToCloudinary } from "../../../utils/upload-to-cloudinary.js";
-import { getUserInfo } from "./get-user-info.js";
-import { ROLE } from "../../../utils/roles.js";
-import logger from "../../../config/logger.js";
-import pool from "../../../config/database-connection.js";
-import jwt from "jsonwebtoken";
+import type { Request, Response } from 'express';
+import { uploadUserRequirement } from './insert-requirement.js';
+import type { PoolConnection } from 'mysql2/promise';
+import { uploadToCloudinary } from '../../../utils/upload-to-cloudinary.js';
+import { getUserInfo } from './get-user-info.js';
+import { ROLE } from '../../../utils/roles.js';
+import logger from '../../../config/logger.js';
+import pool from '../../../config/database-connection.js';
+import jwt from 'jsonwebtoken';
 
 // Simple JWT payload type
 interface JwtPayload {
@@ -31,24 +31,24 @@ export const uploadRequirement = async (req: Request, res: Response) => {
     const token = req.cookies?.token;
 
     if (!token) {
-      logger.warn("No JWT token provided", { ip });
-      return res.status(401).json({ message: "No token provided" })
-    };
+      logger.warn('No JWT token provided', { ip });
+      return res.status(401).json({ message: 'No token provided' });
+    }
 
     let decoded: JwtPayload;
 
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
     } catch (err: any) {
-      logger.warn("Invalid or expired JWT token", { ip, error: err });
-      return res.status(403).json({ message: "Invalid or expired token" });
+      logger.warn('Invalid or expired JWT token', { ip, error: err });
+      return res.status(403).json({ message: 'Invalid or expired token' });
     }
 
     const { user_id, email, role, is_registered } = decoded;
 
     if (!user_id || !email || !role || !is_registered) {
-      logger.warn("Invalid JWT payload", { user_id, email, role, is_registered, ip });
-      return res.status(400).json({ message: "Invalid token payload" });
+      logger.warn('Invalid JWT payload', { user_id, email, role, is_registered, ip });
+      return res.status(400).json({ message: 'Invalid token payload' });
     }
 
     const allowedRoles = [
@@ -59,15 +59,15 @@ export const uploadRequirement = async (req: Request, res: Response) => {
     ];
 
     if (!allowedRoles.includes(role)) {
-      logger.warn("Unauthorized role attempted to upload requirement", { role, user_id, ip });
-      return res.status(403).json({ message: "Unauthorized role" });
+      logger.warn('Unauthorized role attempted to upload requirement', { role, user_id, ip });
+      return res.status(403).json({ message: 'Unauthorized role' });
     }
 
     const matchedUser = await getUserInfo(connection, user_id);
 
     if (!matchedUser || matchedUser.email !== email || matchedUser.role !== role) {
-      logger.warn("User validation failed", { user_id, email, role, ip });
-      return res.status(403).json({ message: "User validation failed" });
+      logger.warn('User validation failed', { user_id, email, role, ip });
+      return res.status(403).json({ message: 'User validation failed' });
     }
     const files = req.files as MulterFiles;
 
@@ -75,14 +75,16 @@ export const uploadRequirement = async (req: Request, res: Response) => {
 
     switch (role) {
       case ROLE.JOBSEEKER:
-
         payload = {
           ...payload,
           full_name: req.body.full_name?.trim(),
           date_of_birth: req.body.date_of_birth,
           phone: req.body.contact_number?.trim(),
           gender: req.body.gender
-            ? req.body.gender.trim().toLowerCase().replace(/^./, (c: string) => c.toUpperCase())
+            ? req.body.gender
+                .trim()
+                .toLowerCase()
+                .replace(/^./, (c: string) => c.toUpperCase())
             : null,
           present_address: req.body.present_address?.trim(),
           permanent_address: req.body.permanent_address?.trim(),
@@ -98,7 +100,7 @@ export const uploadRequirement = async (req: Request, res: Response) => {
 
           nbi_barangay_clearance: files?.nbi_barangay_clearance?.[0]
             ? await uploadToCloudinary(files.nbi_barangay_clearance[0]?.path)
-            : null
+            : null,
         };
         break;
 
@@ -109,7 +111,10 @@ export const uploadRequirement = async (req: Request, res: Response) => {
           date_of_birth: req.body.date_of_birth,
           phone: req.body.phone?.trim(),
           gender: req.body.gender
-            ? req.body.gender.trim().toLowerCase().replace(/^./, (c: string) => c.toUpperCase())
+            ? req.body.gender
+                .trim()
+                .toLowerCase()
+                .replace(/^./, (c: string) => c.toUpperCase())
             : null,
           present_address: req.body.present_address?.trim(),
           permanent_address: req.body.permanent_address?.trim(),
@@ -143,9 +148,7 @@ export const uploadRequirement = async (req: Request, res: Response) => {
             ? await uploadToCloudinary(files.business_permit_BIR[0]?.path)
             : null,
 
-          DTI: files?.DTI?.[0]
-            ? await uploadToCloudinary(files.DTI[0]?.path)
-            : null,
+          DTI: files?.DTI?.[0] ? await uploadToCloudinary(files.DTI[0]?.path) : null,
 
           business_establishment: files?.business_establishment?.[0]
             ? await uploadToCloudinary(files.business_establishment[0]?.path)
@@ -174,13 +177,13 @@ export const uploadRequirement = async (req: Request, res: Response) => {
 
           agency_certificate: files?.agency_certificate?.[0]
             ? await uploadToCloudinary(files.agency_certificate[0]?.path)
-            : null
+            : null,
         };
         break;
 
       default:
-        logger.warn("Invalid role encountered", { role, user_id, ip });
-        return res.status(400).json({ message: "Invalid role" });
+        logger.warn('Invalid role encountered', { role, user_id, ip });
+        return res.status(400).json({ message: 'Invalid role' });
     }
 
     await uploadUserRequirement(connection, payload);
@@ -188,16 +191,16 @@ export const uploadRequirement = async (req: Request, res: Response) => {
     return res.status(200).json({ message: `${role} requirements uploaded successfully` });
   } catch (error: any) {
     await connection?.rollback();
-    logger.error("Failed to process requirement upload", {
+    logger.error('Failed to process requirement upload', {
       ip,
-      name: error?.name || "UnknownError",
-      message: error?.message || "Unknown error during requirement upload",
-      stack: error?.stack || "No stack trace",
-      cause: error?.cause || "No cause",
+      name: error?.name || 'UnknownError',
+      message: error?.message || 'Unknown error during requirement upload',
+      stack: error?.stack || 'No stack trace',
+      cause: error?.cause || 'No cause',
       error: error,
     });
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: 'Server error' });
   } finally {
-      if (connection) connection.release();
+    if (connection) connection.release();
   }
 };

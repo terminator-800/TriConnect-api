@@ -101,24 +101,24 @@ export const getUserProfile = async (
     const ip = request.ip;
 
     if (!request.user) {
-      logger.warn("User not found in request", { ip });
+      logger.warn('User not found in request', { ip });
       return response.status(403).json({ error: 'Forbidden: User not found in request' });
     }
 
     const { user_id, role, email, is_registered } = request.user;
 
     if (!user_id || !role || !email) {
-      logger.warn("Invalid user data in token", { user_id, role, email, ip });
+      logger.warn('Invalid user data in token', { user_id, role, email, ip });
       return response.status(403).json({ error: 'Forbidden: Invalid user data in token' });
     }
 
     if (!allowedRoles.includes(role)) {
-      logger.warn("Unauthorized role tried to access profile", { role, user_id, ip });
+      logger.warn('Unauthorized role tried to access profile', { role, user_id, ip });
       return response.status(403).json({ error: 'Forbidden: Unauthorized role' });
     }
 
     if (!is_registered) {
-      logger.warn("Unregistered user tried to access profile", { user_id, ip });
+      logger.warn('Unregistered user tried to access profile', { user_id, ip });
       return response.status(403).json({ error: 'User is not registered' });
     }
 
@@ -141,27 +141,27 @@ export const getUserProfile = async (
         userProfile = await getAdministratorProfile(connection, user_id);
         break;
       default:
-        logger.warn("Unsupported role for profile access", { role, user_id, ip });
+        logger.warn('Unsupported role for profile access', { role, user_id, ip });
         return response.status(403).json({ error: 'Unsupported role for profile access' });
     }
 
     if (!userProfile) {
-      logger.warn("Profile not found", { user_id, role, ip });
+      logger.warn('Profile not found', { user_id, role, ip });
       return response.status(404).json({ error: 'Profile not found' });
     }
 
     return response.status(200).json(userProfile);
   } catch (error: any) {
-    logger.error("Failed to fetch user profile", {
+    logger.error('Failed to fetch user profile', {
       ip: request.ip,
-      name: error?.name || "UnknownError",
-      message: error?.message || "Unknown error",
-      stack: error?.stack || "No stack trace",
-      cause: error?.cause || "No cause",
+      name: error?.name || 'UnknownError',
+      message: error?.message || 'Unknown error',
+      stack: error?.stack || 'No stack trace',
+      cause: error?.cause || 'No cause',
       error,
     });
     return response.status(500).json({ error: 'Internal server error' });
   } finally {
-      if (connection) connection.release();
+    if (connection) connection.release();
   }
 };

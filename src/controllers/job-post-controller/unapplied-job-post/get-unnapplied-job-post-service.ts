@@ -1,8 +1,12 @@
-import { format } from "date-fns";
-import type { PoolConnection, RowDataPacket } from "mysql2/promise";
-import logger from "../../../config/logger.js";
+import { format } from 'date-fns';
+import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
+import logger from '../../../config/logger.js';
 
-export type UserRole = "jobseeker" | "individual-employer" | "business-employer" | "manpower-provider";
+export type UserRole =
+  | 'jobseeker'
+  | 'individual-employer'
+  | 'business-employer'
+  | 'manpower-provider';
 
 export interface JobPostRow extends RowDataPacket {
   job_post_id: number;
@@ -40,32 +44,32 @@ export interface JobPostRow extends RowDataPacket {
 
 export type FlattenedJobPost =
   | ({
-    role: "individual-employer";
-    employer_name: string;
-    submitted_by: string;
-    full_name: string;
-    gender: string | undefined;
-    present_address: string | undefined;
-  } & BaseJobPost)
+      role: 'individual-employer';
+      employer_name: string;
+      submitted_by: string;
+      full_name: string;
+      gender: string | undefined;
+      present_address: string | undefined;
+    } & BaseJobPost)
   | ({
-    role: "business-employer";
-    employer_name: string;
-    submitted_by: string;
-    business_name: string;
-    business_address: string | undefined;
-    industry: string | undefined;
-    business_size: string | undefined;
-    authorized_person: string | undefined;
-  } & BaseJobPost)
+      role: 'business-employer';
+      employer_name: string;
+      submitted_by: string;
+      business_name: string;
+      business_address: string | undefined;
+      industry: string | undefined;
+      business_size: string | undefined;
+      authorized_person: string | undefined;
+    } & BaseJobPost)
   | ({
-    role: "manpower-provider";
-    employer_name: string;
-    submitted_by: string;
-    agency_name: string;
-    agency_address: string | undefined;
-    agency_services: string | undefined;
-    agency_authorized_person: string | undefined;
-  } & BaseJobPost)
+      role: 'manpower-provider';
+      employer_name: string;
+      submitted_by: string;
+      agency_name: string;
+      agency_address: string | undefined;
+      agency_services: string | undefined;
+      agency_authorized_person: string | undefined;
+    } & BaseJobPost)
   | BaseJobPost;
 
 interface BaseJobPost {
@@ -166,25 +170,25 @@ export async function getUnappliedJobPosts(
           : null,
       };
 
-      if (post.role === "individual-employer") {
+      if (post.role === 'individual-employer') {
         return {
           ...base,
-          role: "individual-employer",
-          employer_name: post.ie_full_name || "",
-          submitted_by: post.ie_full_name || "",
-          full_name: post.ie_full_name || "",
+          role: 'individual-employer',
+          employer_name: post.ie_full_name || '',
+          submitted_by: post.ie_full_name || '',
+          full_name: post.ie_full_name || '',
           gender: post.ie_gender,
           present_address: post.ie_present_address,
         };
       }
 
-      if (post.role === "business-employer") {
+      if (post.role === 'business-employer') {
         return {
           ...base,
-          role: "business-employer",
-          employer_name: post.business_name || "",
-          submitted_by: post.be_authorized_person || "",
-          business_name: post.business_name || "",
+          role: 'business-employer',
+          employer_name: post.business_name || '',
+          submitted_by: post.be_authorized_person || '',
+          business_name: post.business_name || '',
           business_address: post.business_address,
           industry: post.industry,
           business_size: post.business_size,
@@ -192,13 +196,13 @@ export async function getUnappliedJobPosts(
         };
       }
 
-      if (post.role === "manpower-provider") {
+      if (post.role === 'manpower-provider') {
         return {
           ...base,
-          role: "manpower-provider",
-          employer_name: post.agency_name || "",
-          submitted_by: post.agency_authorized_person || "",
-          agency_name: post.agency_name || "",
+          role: 'manpower-provider',
+          employer_name: post.agency_name || '',
+          submitted_by: post.agency_authorized_person || '',
+          agency_name: post.agency_name || '',
           agency_address: post.agency_address,
           agency_services: post.agency_services,
           agency_authorized_person: post.agency_authorized_person,

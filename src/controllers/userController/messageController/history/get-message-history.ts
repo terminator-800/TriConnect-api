@@ -4,33 +4,33 @@ import logger from '../../../../config/logger.js';
 
 // DB row type returned from your query
 interface MessageRow extends RowDataPacket {
-    message_id: number;
-    conversation_id: number;
-    sender_id: number;
-    receiver_id: number;
-    message_type: 'text' | 'file';
-    message_text?: string | null;
-    file_url?: string | null;
-    created_at: Date;
+  message_id: number;
+  conversation_id: number;
+  sender_id: number;
+  receiver_id: number;
+  message_type: 'text' | 'file';
+  message_text?: string | null;
+  file_url?: string | null;
+  created_at: Date;
 
-    sender_role: 'jobseeker' | 'individual-employer' | 'business-employer' | 'manpower-provider';
-    sender_name: string;
+  sender_role: 'jobseeker' | 'individual-employer' | 'business-employer' | 'manpower-provider';
+  sender_name: string;
 
-    receiver_role: 'jobseeker' | 'individual-employer' | 'business-employer' | 'manpower-provider';
-    receiver_name: string;
+  receiver_role: 'jobseeker' | 'individual-employer' | 'business-employer' | 'manpower-provider';
+  receiver_name: string;
 }
 
 export interface FormattedMessage extends Omit<MessageRow, 'created_at'> {
-    created_at: string;
+  created_at: string;
 }
 
 export const getMessageHistoryByConversationId = async (
-    connection: PoolConnection,
-    conversation_id: number | string
+  connection: PoolConnection,
+  conversation_id: number | string
 ): Promise<FormattedMessage[]> => {
-    try {
-        const [messages] = await connection.query<MessageRow[]>(
-            `
+  try {
+    const [messages] = await connection.query<MessageRow[]>(
+      `
     SELECT 
       m.*,
 
@@ -71,29 +71,29 @@ export const getMessageHistoryByConversationId = async (
     WHERE m.conversation_id = ?
     ORDER BY m.created_at ASC
     `,
-            [conversation_id]
-        );
+      [conversation_id]
+    );
 
-        const formattedMessages: FormattedMessage[] = messages.map(msg => {
-            const createdAt = new Date(msg.created_at);
-            let displayTime: string;
+    const formattedMessages: FormattedMessage[] = messages.map((msg) => {
+      const createdAt = new Date(msg.created_at);
+      let displayTime: string;
 
-            if (isToday(createdAt)) {
-                displayTime = format(createdAt, 'hh:mm a');
-            } else if (isThisYear(createdAt)) {
-                displayTime = format(createdAt, 'MMM d');
-            } else {
-                displayTime = format(createdAt, 'MMM d, yyyy');
-            }
+      if (isToday(createdAt)) {
+        displayTime = format(createdAt, 'hh:mm a');
+      } else if (isThisYear(createdAt)) {
+        displayTime = format(createdAt, 'MMM d');
+      } else {
+        displayTime = format(createdAt, 'MMM d, yyyy');
+      }
 
-            return {
-                ...msg,
-                created_at: displayTime,
-            };
-        });
+      return {
+        ...msg,
+        created_at: displayTime,
+      };
+    });
 
-        return formattedMessages;
-    } catch (error) {
-        throw error;
-    }
+    return formattedMessages;
+  } catch (error) {
+    throw error;
+  }
 };

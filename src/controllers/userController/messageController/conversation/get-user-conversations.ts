@@ -4,69 +4,69 @@ import logger from '../../../../config/logger.js';
 
 // DB row type returned from your query
 interface ConversationRow extends RowDataPacket {
-    conversation_id: number;
-    sender_id: number;
-    role: 'jobseeker' | 'individual-employer' | 'business-employer' | 'manpower-provider';
-    profile?: string;
-    js_full_name?: string;
-    ie_full_name?: string;
-    business_name?: string;
-    agency_name?: string;
-    authorized_person?: string;
-    authorized_person_id?: string;           // ✅ add this
-    agency_authorized_person?: string;
-    agency_authorized_person_id?: string;   // ✅ add this
-    message_id?: number;
-    message_type?: 'text' | 'file';
-    message_text?: string | null;
-    file_name?: string | null;
-    sent_at?: Date | null;
+  conversation_id: number;
+  sender_id: number;
+  role: 'jobseeker' | 'individual-employer' | 'business-employer' | 'manpower-provider';
+  profile?: string;
+  js_full_name?: string;
+  ie_full_name?: string;
+  business_name?: string;
+  agency_name?: string;
+  authorized_person?: string;
+  authorized_person_id?: string; // ✅ add this
+  agency_authorized_person?: string;
+  agency_authorized_person_id?: string; // ✅ add this
+  message_id?: number;
+  message_type?: 'text' | 'file';
+  message_text?: string | null;
+  file_name?: string | null;
+  sent_at?: Date | null;
 }
 
 // Base conversation type
 interface BaseConversation {
-    conversation_id: number;
-    sender_id: number;
-    role: ConversationRow['role'];
-    message_text: string;
-    sent_at: string | null;
+  conversation_id: number;
+  sender_id: number;
+  role: ConversationRow['role'];
+  message_text: string;
+  sent_at: string | null;
 }
 
 // Extended types per role
 interface JobseekerConversation extends BaseConversation {
-    full_name: string;
+  full_name: string;
 }
 
 interface IndividualEmployerConversation extends BaseConversation {
-    full_name: string;
+  full_name: string;
 }
 
 interface BusinessEmployerConversation extends BaseConversation {
-    business_name?: string;
-    authorized_person?: string;
-    authorized_profile?: string;  // ✅ add this
+  business_name?: string;
+  authorized_person?: string;
+  authorized_profile?: string; // ✅ add this
 }
 
 interface ManpowerProviderConversation extends BaseConversation {
-    agency_name?: string;
-    agency_authorized_person?: string;
-    authorized_profile?: string;  // ✅ add this
+  agency_name?: string;
+  agency_authorized_person?: string;
+  authorized_profile?: string; // ✅ add this
 }
 
 type UserConversation =
-    | JobseekerConversation
-    | IndividualEmployerConversation
-    | BusinessEmployerConversation
-    | ManpowerProviderConversation
-    | BaseConversation; // fallback
+  | JobseekerConversation
+  | IndividualEmployerConversation
+  | BusinessEmployerConversation
+  | ManpowerProviderConversation
+  | BaseConversation; // fallback
 
 export const getUserConversations = async (
-    connection: PoolConnection,
-    user_id: number
+  connection: PoolConnection,
+  user_id: number
 ): Promise<UserConversation[]> => {
-    try {
-        const [rows] = await connection.query<ConversationRow[]>(
-            `
+  try {
+    const [rows] = await connection.query<ConversationRow[]>(
+      `
       SELECT 
           c.conversation_id,
           u.user_id AS sender_id,
@@ -111,63 +111,62 @@ export const getUserConversations = async (
       WHERE c.user1_id = ? OR c.user2_id = ?
       ORDER BY m.created_at DESC
       `,
-            [user_id, user_id, user_id]
-        );
+      [user_id, user_id, user_id]
+    );
 
-        return rows.map((row) => {
-            const preview =
-                row.message_type === 'file' ? row.file_name || '' : row.message_text || 'No message';
+    return rows.map((row) => {
+      const preview =
+        row.message_type === 'file' ? row.file_name || '' : row.message_text || 'No message';
 
-            const base: BaseConversation = {
-                conversation_id: row.conversation_id,
-                sender_id: row.sender_id,
-                role: row.role,
-                message_text: preview,
-                sent_at: row.sent_at ? format(new Date(row.sent_at), "'at' h:mm a") : null,
-            };
+      const base: BaseConversation = {
+        conversation_id: row.conversation_id,
+        sender_id: row.sender_id,
+        role: row.role,
+        message_text: preview,
+        sent_at: row.sent_at ? format(new Date(row.sent_at), "'at' h:mm a") : null,
+      };
 
-            switch (row.role) {
+      switch (row.role) {
+        case 'jobseeker':
+          return {
+            ...base,
+            full_name: row.js_full_name!,
+            profile: row.profile,
+          } as JobseekerConversation;
 
-                case 'jobseeker':
-                    return {
-                        ...base,
-                        full_name: row.js_full_name!,
-                        profile: row.profile,
-                    } as JobseekerConversation;
+        case 'individual-employer':
+          return {
+            ...base,
+            full_name: row.ie_full_name!,
+            profile: row.profile,
+          } as IndividualEmployerConversation;
 
-                case 'individual-employer':
-                    return {
-                        ...base,
-                        full_name: row.ie_full_name!,
-                        profile: row.profile,
-                    } as IndividualEmployerConversation;
+        case 'business-employer':
+          return {
+            ...base,
+            business_name: row.business_name,
+            authorized_person: row.authorized_person,
+            profile: row.profile,
+            authorized_profile: row.authorized_person_id,
+          } as BusinessEmployerConversation;
 
-                case 'business-employer':
-                    return {
-                        ...base,
-                        business_name: row.business_name,
-                        authorized_person: row.authorized_person,
-                        profile: row.profile,
-                        authorized_profile: row.authorized_person_id,
-                    } as BusinessEmployerConversation;
+        case 'manpower-provider':
+          return {
+            ...base,
+            agency_name: row.agency_name,
+            agency_authorized_person: row.agency_authorized_person,
+            profile: row.profile,
+            authorized_profile: row.agency_authorized_person_id,
+          } as ManpowerProviderConversation;
 
-                case 'manpower-provider':
-                    return {
-                        ...base,
-                        agency_name: row.agency_name,
-                        agency_authorized_person: row.agency_authorized_person,
-                        profile: row.profile,
-                        authorized_profile: row.agency_authorized_person_id,
-                    } as ManpowerProviderConversation;
-
-                default:
-                    return base;
-            }
-        });
-    } catch (error) {
-        logger.error("Failed to fetch user conversations", { error, user_id });
-        return [];
-    }
+        default:
+          return base;
+      }
+    });
+  } catch (error) {
+    logger.error('Failed to fetch user conversations', { error, user_id });
+    return [];
+  }
 };
 
 export type { UserConversation };

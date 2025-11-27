@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "npm install --include=dev && npm run build && node dist/server.js"
+    "start": "npm install --include=dev && npm run build && node dist/server.js",
+    "format": "prettier --write . \"**/*.{ts,js,json,md}\""
   },
   "dependencies": {
     "@logtail/node": "^0.5.6",
@@ -38,6 +39,7 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.3.0",
     "@types/nodemailer": "^6.4.19",
+    "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.4",
     "typescript": "^5.9.2"

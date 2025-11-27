@@ -1,5 +1,5 @@
-import type { PoolConnection, RowDataPacket } from "mysql2/promise";
-import logger from "../../../config/logger.js";
+import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
+import logger from '../../../config/logger.js';
 
 // Define the return type for each agency
 export interface UncontactedAgency extends RowDataPacket {
@@ -25,11 +25,11 @@ export const getUncontactedAgencies = async (
 ): Promise<UncontactedAgency[]> => {
   try {
     if (!connection) {
-      throw new Error("Database connection is undefined");
+      throw new Error('Database connection is undefined');
     }
 
     if (!Number.isFinite(userId)) {
-      throw new Error("Invalid userId provided");
+      throw new Error('Invalid userId provided');
     }
 
     const [rows] = await connection.execute<UncontactedAgency[]>(
@@ -49,7 +49,7 @@ export const getUncontactedAgencies = async (
     );
 
     if (!Array.isArray(rows)) {
-      throw new Error("Unexpected result from database query");
+      throw new Error('Unexpected result from database query');
     }
 
     return rows;

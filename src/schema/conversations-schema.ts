@@ -19,4 +19,3 @@ export async function createConversationsTable(connection: Pool | PoolConnection
     throw error;
   }
 }
-

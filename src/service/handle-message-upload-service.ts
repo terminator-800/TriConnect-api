@@ -1,5 +1,5 @@
-import type { PoolConnection, RowDataPacket, ResultSetHeader } from "mysql2/promise";
-import logger from "../config/logger.js";
+import type { PoolConnection, RowDataPacket, ResultSetHeader } from 'mysql2/promise';
+import logger from '../config/logger.js';
 
 interface FileUpload {
   path: string;
@@ -45,9 +45,10 @@ export const handleMessageUpload = async (
       start_date,
       project_description,
       resume,
-      files
+      files,
     } = params;
-    console.log(   sender_id,
+    console.log(
+      sender_id,
       receiver_id,
       message,
       cover_letter,
@@ -62,8 +63,9 @@ export const handleMessageUpload = async (
       start_date,
       project_description,
       resume,
-      files);
-    
+      files
+    );
+
     // Determine conversation
     const user_small_id = Math.min(sender_id, receiver_id);
     const user_large_id = Math.max(sender_id, receiver_id);
@@ -74,7 +76,7 @@ export const handleMessageUpload = async (
     );
 
     let conversation_id: number;
-   
+
     if (existingRows.length > 0 && existingRows[0]) {
       conversation_id = existingRows[0].conversation_id;
     } else {
@@ -85,8 +87,16 @@ export const handleMessageUpload = async (
       );
       conversation_id = result.insertId;
     }
- 
-    if (full_name || phone_number || email_address || current_address || cover_letter || resume || job_title) {
+
+    if (
+      full_name ||
+      phone_number ||
+      email_address ||
+      current_address ||
+      cover_letter ||
+      resume ||
+      job_title
+    ) {
       await connection.query(
         `INSERT INTO messages (
           conversation_id, sender_id, receiver_id,
@@ -103,14 +113,14 @@ export const handleMessageUpload = async (
           email_address ?? null,
           current_address ?? null,
           cover_letter ?? null,
-          resume ? resume.path.replace(/\\/g, "/") : null, 
-          job_title ?? null,                               
-          "apply"                                          
+          resume ? resume.path.replace(/\\/g, '/') : null,
+          job_title ?? null,
+          'apply',
         ]
       );
     }
-    
-       if (
+
+    if (
       employer_name ||
       company_name ||
       phone_number ||
@@ -120,9 +130,9 @@ export const handleMessageUpload = async (
       project_description
     ) {
       const formattedStartDate = start_date
-        ? typeof start_date === "string"
+        ? typeof start_date === 'string'
           ? start_date
-          : start_date.toISOString().slice(0, 19).replace("T", " ")
+          : start_date.toISOString().slice(0, 19).replace('T', ' ')
         : null;
 
       await connection.query(
@@ -143,31 +153,31 @@ export const handleMessageUpload = async (
           project_location ?? null,
           formattedStartDate,
           project_description ?? null,
-          "request"
+          'request',
         ]
       );
     }
 
     // Insert optional text message
-    if (message && message.trim() !== "") {
+    if (message && message.trim() !== '') {
       await connection.query(
         `INSERT INTO messages (
           conversation_id, sender_id, receiver_id,
           message_text, message_type
         ) VALUES (?, ?, ?, ?, ?)`,
-        [conversation_id, sender_id, receiver_id, message, "text"]
+        [conversation_id, sender_id, receiver_id, message, 'text']
       );
     }
 
     // Insert files
     if (files && files.length > 0) {
       for (const file of files) {
-        const file_url = file.path.replace(/\\/g, "/");
+        const file_url = file.path.replace(/\\/g, '/');
         await connection.query(
           `INSERT INTO messages (
             conversation_id, sender_id, receiver_id, message_type, file_url
           ) VALUES (?, ?, ?, ?, ?)`,
-          [conversation_id, sender_id, receiver_id, "file", file_url]
+          [conversation_id, sender_id, receiver_id, 'file', file_url]
         );
       }
     }
@@ -184,15 +194,18 @@ export const handleMessageUpload = async (
     const latestMessage = newMessageRows?.[0];
 
     if (!latestMessage) {
-      logger.error("Failed to retrieve the latest message.", { sender_id, receiver_id, conversation_id });
-      throw new Error("Failed to retrieve the latest message.");
+      logger.error('Failed to retrieve the latest message.', {
+        sender_id,
+        receiver_id,
+        conversation_id,
+      });
+      throw new Error('Failed to retrieve the latest message.');
     }
 
     return latestMessage;
-
   } catch (error) {
-    console.error("REAL ERROR:", error);
-    logger.error("Failed to handle message upload", { error });
-    throw new Error("Failed to handle message upload.");
+    console.error('REAL ERROR:', error);
+    logger.error('Failed to handle message upload', { error });
+    throw new Error('Failed to handle message upload.');
   }
 };

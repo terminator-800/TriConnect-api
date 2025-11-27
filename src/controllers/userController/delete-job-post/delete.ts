@@ -1,11 +1,10 @@
-import { addMonths } from "date-fns";
-import type { PoolConnection, ResultSetHeader } from "mysql2/promise";
+import { addMonths } from 'date-fns';
+import type { PoolConnection, ResultSetHeader } from 'mysql2/promise';
 
 export const deleteJobPost = async (
   connection: PoolConnection,
   jobPostId: number
 ): Promise<void> => {
-
   const expiresAt = addMonths(new Date(), 1);
 
   // 1. Main job_post table

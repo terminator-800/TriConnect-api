@@ -1,94 +1,94 @@
-import type { CustomRequest } from "../../../types/express/auth.js";
-import type { Response } from "express";
-import { format } from "date-fns";
-import { ROLE } from "../../../utils/roles.js";
-import pool from "../../../config/database-connection.js";
-import logger from "../../../config/logger.js";
+import type { CustomRequest } from '../../../types/express/auth.js';
+import type { Response } from 'express';
+import { format } from 'date-fns';
+import { ROLE } from '../../../utils/roles.js';
+import pool from '../../../config/database-connection.js';
+import logger from '../../../config/logger.js';
 
-type Role = typeof ROLE[keyof typeof ROLE];
+type Role = (typeof ROLE)[keyof typeof ROLE];
 
 interface BaseJobPost {
-    user_id: number;
-    role: Role;
-    email: string;
-    job_post_id: number;
-    job_title: string;
-    job_type: string;
-    salary_range: string;
-    location: string;
-    required_skill: string;
-    job_description: string;
-    approved_at: string | null;
-    verified_at: string | null;
+  user_id: number;
+  role: Role;
+  email: string;
+  job_post_id: number;
+  job_title: string;
+  job_type: string;
+  salary_range: string;
+  location: string;
+  required_skill: string;
+  job_description: string;
+  approved_at: string | null;
+  verified_at: string | null;
 }
 
 interface JobseekerJobPost extends BaseJobPost {
-    full_name: string;
-    date_of_birth: string | null;
-    phone: string;
-    gender: string;
-    present_address: string;
-    permanent_address: string;
-    education: string;
-    skills: string;
-    government_id: string;
-    selfie_with_id: string;
-    nbi_barangay_clearance: string;
+  full_name: string;
+  date_of_birth: string | null;
+  phone: string;
+  gender: string;
+  present_address: string;
+  permanent_address: string;
+  education: string;
+  skills: string;
+  government_id: string;
+  selfie_with_id: string;
+  nbi_barangay_clearance: string;
 }
 
 interface IndividualEmployerJobPost extends BaseJobPost {
-    full_name: string;
-    date_of_birth: string | null;
-    phone: string;
-    gender: string;
-    present_address: string;
-    permanent_address: string;
-    government_id: string;
-    selfie_with_id: string;
-    nbi_barangay_clearance: string;
+  full_name: string;
+  date_of_birth: string | null;
+  phone: string;
+  gender: string;
+  present_address: string;
+  permanent_address: string;
+  government_id: string;
+  selfie_with_id: string;
+  nbi_barangay_clearance: string;
 }
 
 interface BusinessEmployerJobPost extends BaseJobPost {
-    business_name: string;
-    business_address: string;
-    industry: string;
-    business_size: string;
-    authorized_person: string;
-    authorized_person_id: string;
-    business_permit_BIR: string;
-    DTI: string;
-    business_establishment: string;
+  business_name: string;
+  business_address: string;
+  industry: string;
+  business_size: string;
+  authorized_person: string;
+  authorized_person_id: string;
+  business_permit_BIR: string;
+  DTI: string;
+  business_establishment: string;
 }
 
 interface ManpowerProviderJobPost extends BaseJobPost {
-    agency_name: string;
-    agency_address: string;
-    agency_services: string;
-    agency_authorized_person: string;
-    authorized_person_id: string;
-    dole_registration_number: string;
-    mayors_permit: string;
-    agency_certificate: string;
+  agency_name: string;
+  agency_address: string;
+  agency_services: string;
+  agency_authorized_person: string;
+  authorized_person_id: string;
+  dole_registration_number: string;
+  mayors_permit: string;
+  agency_certificate: string;
 }
 
 type VerifiedJobPost =
-    | JobseekerJobPost
-    | IndividualEmployerJobPost
-    | BusinessEmployerJobPost
-    | ManpowerProviderJobPost
-    | BaseJobPost;
+  | JobseekerJobPost
+  | IndividualEmployerJobPost
+  | BusinessEmployerJobPost
+  | ManpowerProviderJobPost
+  | BaseJobPost;
 
 export const verifiedJobPosts = async (req: CustomRequest, res: Response) => {
-    let connection;
+  let connection;
 
-    if (req.user?.role !== ROLE.ADMINISTRATOR) {
-        return res.status(403).json({ message: "Forbidden: Administrator only" });
-    }
+  if (req.user?.role !== ROLE.ADMINISTRATOR) {
+    return res.status(403).json({ message: 'Forbidden: Administrator only' });
+  }
 
-    try {
-        connection = await pool.getConnection();
+  try {
+    connection = await pool.getConnection();
 
-        const [rows] = await connection.query<any[]>(`
+    const [rows] = await connection.query<any[]>(`
             /* ===== Unified Verified Job Posts (All Types) ===== */
 
             /* Standard Job Post */
@@ -196,20 +196,18 @@ export const verifiedJobPosts = async (req: CustomRequest, res: Response) => {
             ORDER BY approved_at DESC, submitted_at DESC;
         `);
 
-        const formattedRows = rows.map(job => ({
-            ...job,
-            approved_at: job.approved_at ? format(new Date(job.approved_at), "yyyy-MM-dd ") : null,
-            submitted_at: job.submitted_at ? format(new Date(job.submitted_at), "yyyy-MM-dd") : null,
-            verified_at: job.verified_at ? format(new Date(job.verified_at), "yyyy-MM-dd") : null,
-        }));
-        
-        res.json(formattedRows);
+    const formattedRows = rows.map((job) => ({
+      ...job,
+      approved_at: job.approved_at ? format(new Date(job.approved_at), 'yyyy-MM-dd ') : null,
+      submitted_at: job.submitted_at ? format(new Date(job.submitted_at), 'yyyy-MM-dd') : null,
+      verified_at: job.verified_at ? format(new Date(job.verified_at), 'yyyy-MM-dd') : null,
+    }));
 
-    } catch (err) {
-        logger.error(err);
-        return res.status(500).json({ message: "Failed to fetch verified job posts." });
-    } finally {
-        if (connection) connection.release();
-    }
+    res.json(formattedRows);
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).json({ message: 'Failed to fetch verified job posts.' });
+  } finally {
+    if (connection) connection.release();
+  }
 };
-

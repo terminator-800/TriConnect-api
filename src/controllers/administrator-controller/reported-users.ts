@@ -1,86 +1,86 @@
-import type { PoolConnection, RowDataPacket } from "mysql2/promise";
-import type { Request, Response } from "express";
-import { format } from "date-fns";
-import pool from "../../config/database-connection.js";
-import logger from "../../config/logger.js";
+import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
+import type { Request, Response } from 'express';
+import { format } from 'date-fns';
+import pool from '../../config/database-connection.js';
+import logger from '../../config/logger.js';
 
 // --- DB Row Types ---
 interface ReportRow extends RowDataPacket {
-    report_id: number;
-    reason: string;
-    message: string;
-    created_at: Date | string;
-    reporter_id: number;
-    reported_user_id: number;
-    report_status: string;
-    reported_user_profile?: string;
-    reported_user_role: string;
-    reported_user_status: string;
-    reporter_role: string;
+  report_id: number;
+  reason: string;
+  message: string;
+  created_at: Date | string;
+  reporter_id: number;
+  reported_user_id: number;
+  report_status: string;
+  reported_user_profile?: string;
+  reported_user_role: string;
+  reported_user_status: string;
+  reporter_role: string;
 
-    reporter_js_name?: string;
-    reporter_ie_name?: string;
-    reporter_mp_agency_name?: string;
-    reporter_mp_authorized_person?: string;
-    reporter_be_business_name?: string;
-    reporter_be_authorized_person?: string;
+  reporter_js_name?: string;
+  reporter_ie_name?: string;
+  reporter_mp_agency_name?: string;
+  reporter_mp_authorized_person?: string;
+  reporter_be_business_name?: string;
+  reporter_be_authorized_person?: string;
 
-    reported_js_name?: string;
-    reported_ie_name?: string;
-    reported_mp_agency_name?: string;
-    reported_mp_authorized_person?: string;
-    reported_be_business_name?: string;
-    reported_be_authorized_person?: string;
+  reported_js_name?: string;
+  reported_ie_name?: string;
+  reported_mp_agency_name?: string;
+  reported_mp_authorized_person?: string;
+  reported_be_business_name?: string;
+  reported_be_authorized_person?: string;
 }
 
 interface ProofRow extends RowDataPacket {
-    proof_id: number;
-    file_url: string;
-    file_type: string;
-    uploaded_at: Date | string;
+  proof_id: number;
+  file_url: string;
+  file_type: string;
+  uploaded_at: Date | string;
 }
 
 // --- Formatted Response Types ---
 interface FormattedProof {
-    proof_id: number;
-    file_url: string;
-    file_type: string;
-    uploaded_at: string;
+  proof_id: number;
+  file_url: string;
+  file_type: string;
+  uploaded_at: string;
 }
 
 interface FormattedUser {
-    user_id: number;
-    role: string;
-    status?: string;
-    name: string;
-    entity: string;
-    profile?: string | null;
+  user_id: number;
+  role: string;
+  status?: string;
+  name: string;
+  entity: string;
+  profile?: string | null;
 }
 
 interface FormattedReport {
-    report_id: number;
-    reason: string;
-    message: string;
-    created_at: string;
-    can_view: boolean;
-    reporter: FormattedUser;
-    reported_user: FormattedUser;
-    proofs: FormattedProof[];
+  report_id: number;
+  reason: string;
+  message: string;
+  created_at: string;
+  can_view: boolean;
+  reporter: FormattedUser;
+  reported_user: FormattedUser;
+  proofs: FormattedProof[];
 }
 
 export const reportedUsers = async (req: Request, res: Response): Promise<void> => {
-    let connection: PoolConnection | undefined;
+  let connection: PoolConnection | undefined;
 
-    if (req.user?.role !== "administrator") {
-        logger.warn(`Unauthorized access attempt by user ID ${req.user?.user_id}.`);
-        res.status(403).json({ error: "Forbidden: Admins only." });
-        return;
-    }
+  if (req.user?.role !== 'administrator') {
+    logger.warn(`Unauthorized access attempt by user ID ${req.user?.user_id}.`);
+    res.status(403).json({ error: 'Forbidden: Admins only.' });
+    return;
+  }
 
-    try {
-        connection = await pool.getConnection();
+  try {
+    connection = await pool.getConnection();
 
-        const [rows] = await connection.query<ReportRow[]>(`
+    const [rows] = await connection.query<ReportRow[]>(`
             SELECT 
                 r.report_id,
                 r.reason,
@@ -131,62 +131,81 @@ export const reportedUsers = async (req: Request, res: Response): Promise<void> 
             ORDER BY r.created_at DESC
         `);
 
-        const formattedReports: FormattedReport[] = await Promise.all(
-            rows.map(async (row) => {
-
-                const [proofs] = await connection!.query<ProofRow[]>(
-                    `SELECT proof_id, file_url, file_type, uploaded_at FROM report_proofs WHERE report_id = ?`,
-                    [row.report_id]
-                );
-
-                const reporter_name = row.reporter_js_name || row.reporter_ie_name || row.reporter_mp_authorized_person || row.reporter_be_authorized_person || "Unknown";
-                const reporter_entity = row.reporter_js_name || row.reporter_ie_name || row.reporter_mp_agency_name || row.reporter_be_business_name || "Unknown";
-
-                const reported_name = row.reported_js_name || row.reported_ie_name || row.reported_mp_authorized_person || row.reported_be_authorized_person || "Unknown";
-                const reported_entity = row.reported_js_name || row.reported_ie_name || row.reported_mp_agency_name || row.reported_be_business_name || "Unknown";
-
-                return {
-                    report_id: row.report_id,
-                    reason: row.reason,
-                    message: row.message,
-                    created_at: format(new Date(row.created_at), "MMMM d, yyyy 'at' hh:mm a"),
-                    can_view: true,
-                    reporter: {
-                        user_id: row.reporter_id,
-                        role: row.reporter_role,
-                        name: reporter_name,
-                        entity: reporter_entity,
-                    },
-                    reported_user: {
-                        user_id: row.reported_user_id,
-                        role: row.reported_user_role,
-                        status: row.reported_user_status,
-                        name: reported_name,
-                        entity: reported_entity,
-                        profile: row.reported_user_profile || null
-                    },
-                    proofs: proofs.map((proof) => ({
-                        proof_id: proof.proof_id,
-                        file_url: proof.file_url,
-                        file_type: proof.file_type,
-                        uploaded_at: format(new Date(proof.uploaded_at), "MMMM d, yyyy 'at' hh:mm a"),
-                    })),
-                };
-            })
+    const formattedReports: FormattedReport[] = await Promise.all(
+      rows.map(async (row) => {
+        const [proofs] = await connection!.query<ProofRow[]>(
+          `SELECT proof_id, file_url, file_type, uploaded_at FROM report_proofs WHERE report_id = ?`,
+          [row.report_id]
         );
 
-        res.json(formattedReports);
-    } catch (error: any) {
-        logger.error("Error in reportedUsers endpoint", {
-            ip: req.ip,
-            message: error?.message || "Unknown error",
-            stack: error?.stack || "No stack trace",
-            name: error?.name || "UnknownError",
-            cause: error?.cause || "No cause",
-            error,
-        });
-        res.status(500).json({ error: "Internal server error" });
-    } finally {
-        if (connection) connection.release();
-    }
-}
+        const reporter_name =
+          row.reporter_js_name ||
+          row.reporter_ie_name ||
+          row.reporter_mp_authorized_person ||
+          row.reporter_be_authorized_person ||
+          'Unknown';
+        const reporter_entity =
+          row.reporter_js_name ||
+          row.reporter_ie_name ||
+          row.reporter_mp_agency_name ||
+          row.reporter_be_business_name ||
+          'Unknown';
+
+        const reported_name =
+          row.reported_js_name ||
+          row.reported_ie_name ||
+          row.reported_mp_authorized_person ||
+          row.reported_be_authorized_person ||
+          'Unknown';
+        const reported_entity =
+          row.reported_js_name ||
+          row.reported_ie_name ||
+          row.reported_mp_agency_name ||
+          row.reported_be_business_name ||
+          'Unknown';
+
+        return {
+          report_id: row.report_id,
+          reason: row.reason,
+          message: row.message,
+          created_at: format(new Date(row.created_at), "MMMM d, yyyy 'at' hh:mm a"),
+          can_view: true,
+          reporter: {
+            user_id: row.reporter_id,
+            role: row.reporter_role,
+            name: reporter_name,
+            entity: reporter_entity,
+          },
+          reported_user: {
+            user_id: row.reported_user_id,
+            role: row.reported_user_role,
+            status: row.reported_user_status,
+            name: reported_name,
+            entity: reported_entity,
+            profile: row.reported_user_profile || null,
+          },
+          proofs: proofs.map((proof) => ({
+            proof_id: proof.proof_id,
+            file_url: proof.file_url,
+            file_type: proof.file_type,
+            uploaded_at: format(new Date(proof.uploaded_at), "MMMM d, yyyy 'at' hh:mm a"),
+          })),
+        };
+      })
+    );
+
+    res.json(formattedReports);
+  } catch (error: any) {
+    logger.error('Error in reportedUsers endpoint', {
+      ip: req.ip,
+      message: error?.message || 'Unknown error',
+      stack: error?.stack || 'No stack trace',
+      name: error?.name || 'UnknownError',
+      cause: error?.cause || 'No cause',
+      error,
+    });
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    if (connection) connection.release();
+  }
+};

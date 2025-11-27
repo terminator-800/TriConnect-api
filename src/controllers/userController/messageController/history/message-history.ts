@@ -14,7 +14,7 @@ export const messageHistory = async (req: Request, res: Response): Promise<void>
     const conversation_id = req.params.conversation_id;
 
     if (!conversation_id) {
-      logger.warn("Missing conversation_id parameter", { user_id, ip });
+      logger.warn('Missing conversation_id parameter', { user_id, ip });
       res.status(400).json({ error: 'conversation_id is required' });
       return;
     }
@@ -25,13 +25,13 @@ export const messageHistory = async (req: Request, res: Response): Promise<void>
 
     res.json(messages);
   } catch (error: any) {
-    logger.error("Unexpected error in messageHistory handler", {
+    logger.error('Unexpected error in messageHistory handler', {
       error,
-      name: error?.name || "UnknownError",
-      message: error?.message || "No message",
-      stack: error?.stack || "No stack trace",
-      cause: error?.cause || "No cause",
-      ip
+      name: error?.name || 'UnknownError',
+      message: error?.message || 'No message',
+      stack: error?.stack || 'No stack trace',
+      cause: error?.cause || 'No cause',
+      ip,
     });
     res.status(500).json({ error: 'Internal Server Error' });
   } finally {

@@ -17,11 +17,10 @@ export async function createReportProofsTable(connection: Pool | PoolConnection)
       INDEX idx_report_id (report_id)
     );
   `;
-  
+
   try {
     await connection.execute(query);
   } catch (error) {
-    throw error; 
+    throw error;
   }
 }
-

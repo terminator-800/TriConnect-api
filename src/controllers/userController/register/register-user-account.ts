@@ -1,26 +1,26 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import type { Request, Response } from "express";
-import type { PoolConnection } from "mysql2/promise";
-import { findUsersEmail } from "../../../service/find-user-email-service.js";
-import { createUsers } from "./create-user.js";
-import type { User } from "../../../interface/interface.js";
-import { ROLE } from "../../../utils/roles.js";
-import nodemailer from "nodemailer";
-import bcrypt from "bcrypt";
-import logger from "../../../config/logger.js";
-import pool from "../../../config/database-connection.js";
-import jwt from "jsonwebtoken";
+import type { Request, Response } from 'express';
+import type { PoolConnection } from 'mysql2/promise';
+import { findUsersEmail } from '../../../service/find-user-email-service.js';
+import { createUsers } from './create-user.js';
+import type { User } from '../../../interface/interface.js';
+import { ROLE } from '../../../utils/roles.js';
+import nodemailer from 'nodemailer';
+import bcrypt from 'bcrypt';
+import logger from '../../../config/logger.js';
+import pool from '../../../config/database-connection.js';
+import jwt from 'jsonwebtoken';
 
 const { CLIENT_ORIGIN, JWT_SECRET, EMAIL_USER, EMAIL_PASS } = process.env;
 
 if (!CLIENT_ORIGIN || !JWT_SECRET || !EMAIL_USER || !EMAIL_PASS) {
-  logger.error("Missing required environment variables for registerUser");
+  logger.error('Missing required environment variables for registerUser');
   process.exit(1);
 }
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: 'gmail',
   auth: {
     user: EMAIL_USER,
     pass: EMAIL_PASS,
@@ -28,10 +28,10 @@ const transporter = nodemailer.createTransport({
 });
 
 const allowedRoles: Partial<Record<keyof typeof ROLE, string>> = {
-  [ROLE.BUSINESS_EMPLOYER]: "business employer",
-  [ROLE.INDIVIDUAL_EMPLOYER]: "individual employer",
-  [ROLE.JOBSEEKER]: "jobseeker",
-  [ROLE.MANPOWER_PROVIDER]: "manpower provider",
+  [ROLE.BUSINESS_EMPLOYER]: 'business employer',
+  [ROLE.INDIVIDUAL_EMPLOYER]: 'individual employer',
+  [ROLE.JOBSEEKER]: 'jobseeker',
+  [ROLE.MANPOWER_PROVIDER]: 'manpower provider',
 };
 
 interface RegisterUserBody {
@@ -45,23 +45,29 @@ interface JwtPayload {
   role: keyof typeof ROLE;
 }
 
-export const registerUser = async (request: Request<unknown, unknown, RegisterUserBody>, response: Response) => {
+export const registerUser = async (
+  request: Request<unknown, unknown, RegisterUserBody>,
+  response: Response
+) => {
   let connection: PoolConnection | undefined;
   type AllowedRoleKey = keyof typeof ROLE;
   const ip = request.ip;
 
-  const { email, role, password } = request.body as { email: string; role: AllowedRoleKey; password: string };
+  const { email, role, password } = request.body as {
+    email: string;
+    role: AllowedRoleKey;
+    password: string;
+  };
 
   if (!email || !role || !password) {
-    logger.warn("Missing required fields in registerUser", { email, role, ip });
-    return response.status(400).json({ message: "Missing email, role, or password." });
+    logger.warn('Missing required fields in registerUser', { email, role, ip });
+    return response.status(400).json({ message: 'Missing email, role, or password.' });
   }
 
   if (!(role in allowedRoles)) {
-    logger.warn("Invalid role type in registerUser", { role, ip });
-    return response.status(400).json({ message: "Invalid role type." });
+    logger.warn('Invalid role type in registerUser', { role, ip });
+    return response.status(400).json({ message: 'Invalid role type.' });
   }
-
 
   try {
     connection = await pool.getConnection();
@@ -69,9 +75,9 @@ export const registerUser = async (request: Request<unknown, unknown, RegisterUs
     const existingUser: User | null = await findUsersEmail(connection, email);
 
     if (existingUser) {
-      logger.warn("Attempt to register with existing email", { email, ip });
+      logger.warn('Attempt to register with existing email', { email, ip });
       await connection.rollback();
-      return response.status(409).json({ message: "Email already exists." });
+      return response.status(409).json({ message: 'Email already exists.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -79,14 +85,14 @@ export const registerUser = async (request: Request<unknown, unknown, RegisterUs
     const result = await createUsers(connection, email, hashedPassword, role);
 
     if (!result.success || !result.user_id) {
-      logger.error("Failed to create user", { result, email, role, ip });
+      logger.error('Failed to create user', { result, email, role, ip });
       await connection.rollback();
-      return response.status(500).json({ message: "Failed to create user." });
+      return response.status(500).json({ message: 'Failed to create user.' });
     }
 
     await connection.commit();
 
-    const token = jwt.sign({ email, role }, JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign({ email, role }, JWT_SECRET, { expiresIn: '1h' });
     const verificationLink = `${process.env.API_BASE_URL}/${role}/verify?token=${token}`;
     const emailSubject = `Verify your ${allowedRoles[role]} email`;
 
@@ -161,27 +167,22 @@ export const registerUser = async (request: Request<unknown, unknown, RegisterUs
       html: htmlMessage,
     });
 
-
     return response.status(201).json({
-      message: "Verification email sent. Please check your inbox.",
+      message: 'Verification email sent. Please check your inbox.',
     });
-
   } catch (error: any) {
     await connection?.rollback();
-    logger.error("Unexpected error in registerUser", {
+    logger.error('Unexpected error in registerUser', {
       ip,
-      name: error?.name || "UnknownError",
-      message: error?.message || "Unknown error during user registration",
-      stack: error?.stack || "No stack trace",
-      cause: error?.cause || "No cause",
-      error
+      name: error?.name || 'UnknownError',
+      message: error?.message || 'Unknown error during user registration',
+      stack: error?.stack || 'No stack trace',
+      cause: error?.cause || 'No cause',
+      error,
     });
-    
-    return response.status(500).json({ message: "Server error." });
 
+    return response.status(500).json({ message: 'Server error.' });
   } finally {
     if (connection) connection.release();
   }
 };
-
-

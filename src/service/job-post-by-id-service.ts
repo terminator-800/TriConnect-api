@@ -12,10 +12,11 @@ export interface JobPost extends RowDataPacket {
 
 export const getJobPostById = async (
   connection: PoolConnection,
-  jobPostId: number,
+  jobPostId: number
 ): Promise<JobPost | null> => {
   try {
-    const [rows] = await connection.query<JobPost[]>(`
+    const [rows] = await connection.query<JobPost[]>(
+      `
       (
         SELECT 
           job_post_id AS id,
@@ -55,10 +56,11 @@ export const getJobPostById = async (
         WHERE team_job_post_id = ?
       )
       LIMIT 1;
-    `, [jobPostId, jobPostId, jobPostId]);
-    
-    return rows[0] || null;
+    `,
+      [jobPostId, jobPostId, jobPostId]
+    );
 
+    return rows[0] || null;
   } catch (error) {
     throw new Error('Failed to retrieve job post.');
   }

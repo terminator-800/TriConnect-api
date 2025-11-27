@@ -1,0 +1,26 @@
+# Node dependencies
+node_modules
+
+# IDE/editor configs
+.vscode
+.idea
+
+# Environment files
+.env
+
+# Auto-generated lock file
+package-lock.json
+
+# Build or test output (optional if applicable)
+dist
+coverage
+
+# Static or uploaded assets
+uploads
+
+# Cache or temporary folders
+.tmp
+.cache
+
+# Logs
+*.log

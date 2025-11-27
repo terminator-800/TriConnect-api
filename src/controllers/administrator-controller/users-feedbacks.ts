@@ -1,8 +1,8 @@
-import type { CustomRequest } from "../../types/express/auth.js";
-import type { RowDataPacket } from "mysql2/promise";
-import type { Response } from "express";
-import pool from "../../config/database-connection.js";
-import logger from "../../config/logger.js";
+import type { CustomRequest } from '../../types/express/auth.js';
+import type { RowDataPacket } from 'mysql2/promise';
+import type { Response } from 'express';
+import pool from '../../config/database-connection.js';
+import logger from '../../config/logger.js';
 
 interface UserFeedback extends RowDataPacket {
   feedback_id: number;
@@ -17,9 +17,11 @@ export const usersFeedbacks = async (req: CustomRequest, res: Response) => {
   let connection: Awaited<ReturnType<typeof pool.getConnection>> | undefined;
 
   try {
-    if (req.user?.role !== "administrator") {
-      logger.warn(`User ID ${req.user?.user_id} attempted to fetch feedback without proper authorization.`);
-      return res.status(403).json({ message: "Forbidden: Admins only" });
+    if (req.user?.role !== 'administrator') {
+      logger.warn(
+        `User ID ${req.user?.user_id} attempted to fetch feedback without proper authorization.`
+      );
+      return res.status(403).json({ message: 'Forbidden: Admins only' });
     }
 
     connection = await pool.getConnection();
@@ -27,22 +29,23 @@ export const usersFeedbacks = async (req: CustomRequest, res: Response) => {
 
     return res.status(200).json(feedbacks);
   } catch (error: any) {
-    logger.error("Error in usersFeedbacks controller", {
+    logger.error('Error in usersFeedbacks controller', {
       ip: req.ip,
-      message: error?.message || "Unknown error",
-      stack: error?.stack || "No stack trace",
-      name: error?.name || "UnknownError",
-      cause: error?.cause || "No cause",
+      message: error?.message || 'Unknown error',
+      stack: error?.stack || 'No stack trace',
+      name: error?.name || 'UnknownError',
+      cause: error?.cause || 'No cause',
       error,
     });
-    return res.status(500).json({ message: "Failed to fetch user feedback." });
+    return res.status(500).json({ message: 'Failed to fetch user feedback.' });
   } finally {
     if (connection) connection.release();
   }
 };
 
-
-async function getUserFeedbacks(connection: Awaited<ReturnType<typeof pool.getConnection>>): Promise<UserFeedback[]> {
+async function getUserFeedbacks(
+  connection: Awaited<ReturnType<typeof pool.getConnection>>
+): Promise<UserFeedback[]> {
   try {
     const [rows] = await connection.query<RowDataPacket[]>(`
       SELECT
@@ -71,4 +74,3 @@ async function getUserFeedbacks(connection: Awaited<ReturnType<typeof pool.getCo
     throw error;
   }
 }
-

@@ -1,6 +1,6 @@
 // Users Schema
 export async function createUsersTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS users (
       user_id INT AUTO_INCREMENT PRIMARY KEY,
       role ENUM('jobseeker', 'business-employer', 'individual-employer', 'manpower-provider', 'administrator') NOT NULL,
@@ -26,12 +26,12 @@ export async function createUsersTable() {
 
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-  `
+  `;
 }
 
 // Business Employer Schema
 export async function createBusinessEmployerTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS business_employer (
       business_employer_id INT PRIMARY KEY,
       business_name VARCHAR(100),
@@ -46,12 +46,12 @@ export async function createBusinessEmployerTable() {
       profile VARCHAR(255), 
       FOREIGN KEY (business_employer_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
-  `
+  `;
 }
 
 // Individual Employer Schema
 export async function createIndividualEmployerTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS individual_employer (
       individual_employer_id INT PRIMARY KEY,
       full_name VARCHAR(100),
@@ -66,12 +66,12 @@ export async function createIndividualEmployerTable() {
       profile VARCHAR(255), 
       FOREIGN KEY (individual_employer_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
-  `
+  `;
 }
 
 // Jobseeker Schema
 export async function createJobseekerTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS jobseeker (
       jobseeker_id INT PRIMARY KEY,
       full_name VARCHAR(100),
@@ -88,12 +88,12 @@ export async function createJobseekerTable() {
       profile VARCHAR(255), 
       FOREIGN KEY (jobseeker_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
-`
+`;
 }
 
 // Manpower Provider Schema
 export async function createManpowerProviderTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS manpower_provider (
       manpower_provider_id INT PRIMARY KEY,
       agency_name VARCHAR(100),
@@ -107,12 +107,12 @@ export async function createManpowerProviderTable() {
       profile VARCHAR(255), 
       FOREIGN KEY (manpower_provider_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
-  `
+  `;
 }
 
 // Conversations Schema
 export async function createConversationsTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS conversations (
       conversation_id INT AUTO_INCREMENT PRIMARY KEY,
       user1_id INT NOT NULL,
@@ -122,12 +122,12 @@ export async function createConversationsTable() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE KEY unique_pair (user_small_id, user_large_id)
     );
-  `
+  `;
 }
 
 // Feedback Schema
 export async function createFeedbackTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS feedback (
       feedback_id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL UNIQUE,
@@ -135,12 +135,12 @@ export async function createFeedbackTable() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
-  `
+  `;
 }
 
 // Job Applications Schema
 export async function createJobApplicationsTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS job_applications (
       application_id INT AUTO_INCREMENT PRIMARY KEY,
       job_post_id INT NOT NULL, -- Foreign key to the job post
@@ -150,12 +150,12 @@ export async function createJobApplicationsTable() {
       FOREIGN KEY (job_post_id) REFERENCES job_post(job_post_id) ON DELETE CASCADE,
       FOREIGN KEY (applicant_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
-`
+`;
 }
 
 // Job Post Schema
 export async function createJobPostTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS job_post (
        job_post_id INT AUTO_INCREMENT PRIMARY KEY,
       user_id INT NOT NULL, -- Foreign key to reference the user
@@ -176,7 +176,7 @@ export async function createJobPostTable() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE 
     );
-  `
+  `;
 }
 
 export async function createIndividualJobPostTable() {
@@ -241,11 +241,9 @@ export async function createTeamJobPostTable() {
   }
 }
 
-
-
 // Messages Schema
 export async function createMessagesTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS messages (
       message_id INT AUTO_INCREMENT PRIMARY KEY,
       conversation_id INT NOT NULL,
@@ -268,12 +266,12 @@ export async function createMessagesTable() {
       INDEX idx_conversation_id (conversation_id),
       INDEX idx_receiver_id (receiver_id)
     );
-  `
+  `;
 }
 
 // Report Proof Schema
 export async function createReportProofsTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS report_proofs (
       proof_id INT AUTO_INCREMENT PRIMARY KEY,
       report_id INT NOT NULL,
@@ -287,12 +285,12 @@ export async function createReportProofsTable() {
       -- 📦 Index for quick lookup by report
       INDEX idx_report_id (report_id)
     );
-  `
+  `;
 }
 
 // Reports Schema
 export async function createReportsTable() {
-    `
+  `
     CREATE TABLE IF NOT EXISTS reports (
       report_id INT AUTO_INCREMENT PRIMARY KEY,
       reported_by INT NOT NULL,
@@ -317,7 +315,7 @@ export async function createReportsTable() {
       INDEX idx_conversation_id (conversation_id),
       INDEX idx_job_post_id (job_post_id)
     );
-  `
+  `;
 }
 
 export async function createNotificationTable() {
@@ -371,8 +369,4 @@ export async function createNotificationTable() {
         INDEX idx_reference_id (reference_id)
         );
   `;
-  
 }
-
-
-

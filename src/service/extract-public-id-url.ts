@@ -1,4 +1,4 @@
-import logger from "../config/logger.js";
+import logger from '../config/logger.js';
 
 export function extractPublicIdFromUrl(url: string | null): string | null {
   if (!url) {
@@ -13,7 +13,6 @@ export function extractPublicIdFromUrl(url: string | null): string | null {
     if (!match || !match[1]) {
       logger.warn(`Failed to extract publicId from URL: ${url}`);
       return null;
-      
     }
 
     return match[1];

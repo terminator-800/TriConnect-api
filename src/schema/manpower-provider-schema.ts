@@ -17,9 +17,9 @@ export async function createManpowerProviderTable(connection: Pool | PoolConnect
     );
   `;
 
-   try {
+  try {
     await connection.execute(query);
   } catch (error) {
-    throw error; 
+    throw error;
   }
 }

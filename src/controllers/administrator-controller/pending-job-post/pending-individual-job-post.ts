@@ -1,16 +1,16 @@
-import type { Request, Response } from "express";
-import type { PoolConnection } from "mysql2/promise";
-import { format } from "date-fns";
-import { ROLE } from "../../../utils/roles.js";
-import pool from "../../../config/database-connection.js";
-import logger from "../../../config/logger.js";
+import type { Request, Response } from 'express';
+import type { PoolConnection } from 'mysql2/promise';
+import { format } from 'date-fns';
+import { ROLE } from '../../../utils/roles.js';
+import pool from '../../../config/database-connection.js';
+import logger from '../../../config/logger.js';
 
 type Role =
-  | "jobseeker"
-  | "individual-employer"
-  | "business-employer"
-  | "manpower-provider"
-  | "administrator";
+  | 'jobseeker'
+  | 'individual-employer'
+  | 'business-employer'
+  | 'manpower-provider'
+  | 'administrator';
 
 interface IndividualJobPostBase {
   individual_job_post_id: number;
@@ -42,26 +42,25 @@ export const pendingIndividualJobPosts = async (req: Request, res: Response) => 
     logger.warn(
       `Unauthorized attempt by user ID ${req.user?.user_id} to access pending individual job posts.`
     );
-    res.status(403).json({ error: "Forbidden: Admins only." });
+    res.status(403).json({ error: 'Forbidden: Admins only.' });
     return;
   }
 
   try {
     connection = await pool.getConnection();
-    const jobposts: PendingIndividualJobPost[] =
-      await getPendingIndividualJobPosts(connection);
+    const jobposts: PendingIndividualJobPost[] = await getPendingIndividualJobPosts(connection);
 
     res.status(200).json(jobposts);
   } catch (error: any) {
     logger.error(`Unexpected error in pendingIndividualJobPosts endpoint`, {
       ip: req.ip,
-      message: error?.message || "Unknown error",
-      stack: error?.stack || "No stack trace",
-      name: error?.name || "UnknownError",
-      cause: error?.cause || "No cause",
+      message: error?.message || 'Unknown error',
+      stack: error?.stack || 'No stack trace',
+      name: error?.name || 'UnknownError',
+      cause: error?.cause || 'No cause',
       error,
     });
-    res.status(500).json({ message: "Failed to fetch job posts" });
+    res.status(500).json({ message: 'Failed to fetch job posts' });
   } finally {
     if (connection) connection.release();
   }

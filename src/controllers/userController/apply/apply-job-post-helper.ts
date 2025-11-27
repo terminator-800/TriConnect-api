@@ -1,4 +1,4 @@
-import type { PoolConnection } from "mysql2/promise";
+import type { PoolConnection } from 'mysql2/promise';
 
 export async function insertJobApplication(
   connection: PoolConnection,
@@ -6,7 +6,7 @@ export async function insertJobApplication(
   applicant_id: number,
   role: string
 ): Promise<void> {
- try {
+  try {
     await connection.execute(
       `INSERT INTO job_applications (job_post_id, applicant_id, role, applied_at)
        VALUES (?, ?, ?, NOW())`,
@@ -16,8 +16,3 @@ export async function insertJobApplication(
     throw error;
   }
 }
-
-
-
-
-

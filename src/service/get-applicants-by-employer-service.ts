@@ -1,6 +1,6 @@
-import type { PoolConnection, RowDataPacket } from "mysql2/promise";
-import { format } from "date-fns";
-import logger from "../config/logger.js";
+import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
+import { format } from 'date-fns';
+import logger from '../config/logger.js';
 
 interface GetApplicantsOptions {
   page?: number | string;
@@ -38,12 +38,11 @@ interface ApplicantsResult {
 export async function getApplicantsByEmployer(
   connection: PoolConnection,
   employerUserId: number,
-  options: GetApplicantsOptions = {},
+  options: GetApplicantsOptions = {}
 ): Promise<ApplicantsResult> {
-
   try {
-    const page = Math.max(1, parseInt(options.page?.toString() || "1", 10));
-    const pageSize = Math.min(50, Math.max(1, parseInt(options.pageSize?.toString() || "10", 10)));
+    const page = Math.max(1, parseInt(options.page?.toString() || '1', 10));
+    const pageSize = Math.min(50, Math.max(1, parseInt(options.pageSize?.toString() || '10', 10)));
     const offset = (page - 1) * pageSize;
 
     const countQuery = `
@@ -97,7 +96,11 @@ export async function getApplicantsByEmployer(
     const total = totalRow?.total ?? 0;
 
     // Fetch applicants
-    const [rows] = await connection.query<ApplicantRow[]>(dataQuery, [employerUserId, pageSize, offset]);
+    const [rows] = await connection.query<ApplicantRow[]>(dataQuery, [
+      employerUserId,
+      pageSize,
+      offset,
+    ]);
 
     return {
       total,
@@ -108,12 +111,12 @@ export async function getApplicantsByEmployer(
         applied_at: row.applied_at,
         applied_at_formatted: (() => {
           try {
-            if (!row.applied_at) return "-";
+            if (!row.applied_at) return '-';
             const d = new Date(row.applied_at);
-            if (Number.isNaN(d.getTime())) return "-";
+            if (Number.isNaN(d.getTime())) return '-';
             return format(d, "MMMM d, yyyy 'at' h:mm a");
           } catch (_) {
-            return "-";
+            return '-';
           }
         })(),
         job_post_id: row.job_post_id,
@@ -121,11 +124,11 @@ export async function getApplicantsByEmployer(
         applicant_role: row.applicant_role,
         job_title: row.job_title,
         applicant_name: row.applicant_name,
-        location: row.location || "-",
+        location: row.location || '-',
         conversation_id: row.conversation_id,
       })),
     };
   } catch (error) {
-    throw new Error("Failed to fetch applicants.");
+    throw new Error('Failed to fetch applicants.');
   }
 }

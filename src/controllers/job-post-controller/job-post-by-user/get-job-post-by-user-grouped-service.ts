@@ -1,8 +1,12 @@
-import type { PoolConnection, RowDataPacket } from "mysql2/promise";
-import { format } from "date-fns";
+import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
+import { format } from 'date-fns';
 
-export type UserRole = "jobseeker" | "individual-employer" | "business-employer" | "manpower-provider";
-export type JobCategory = "pending" | "active" | "completed" | "rejected";
+export type UserRole =
+  | 'jobseeker'
+  | 'individual-employer'
+  | 'business-employer'
+  | 'manpower-provider';
+export type JobCategory = 'pending' | 'active' | 'completed' | 'rejected';
 
 export interface UserStatus {
   is_verified: boolean;
@@ -11,7 +15,7 @@ export interface UserStatus {
 }
 
 export interface JobPostRow extends RowDataPacket {
-  post_type: "job_post" | "individual_job_post" | "team_job_post";
+  post_type: 'job_post' | 'individual_job_post' | 'team_job_post';
   post_id: number;
   job_title: string | null;
   job_description: string | null;
@@ -145,7 +149,8 @@ export async function getJobPostsByUserGrouped(
     const grouped: GroupedJobPosts = { pending: [], active: [], completed: [], rejected: [] };
 
     for (const row of rows) {
-      if (row.created_at) row.created_at = format(new Date(row.created_at), "MMMM d, yyyy 'at' h:mm a");
+      if (row.created_at)
+        row.created_at = format(new Date(row.created_at), "MMMM d, yyyy 'at' h:mm a");
 
       if (row.status === 'rejected') grouped.rejected.push(row);
       else if (row.jobpost_status === 'pending') grouped.pending.push(row);

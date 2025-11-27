@@ -47,7 +47,7 @@ export const replyMessage = async (req: AuthenticatedRequest, res: Response) => 
   const ip = req.ip;
 
   if (!sender_id) {
-    logger.warn("Unauthorized message attempt", { ip });
+    logger.warn('Unauthorized message attempt', { ip });
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -74,7 +74,7 @@ export const replyMessage = async (req: AuthenticatedRequest, res: Response) => 
         );
       }
     } catch (error) {
-      logger.error("Failed to upload file to Cloudinary", { error, sender_id, ip });
+      logger.error('Failed to upload file to Cloudinary', { error, sender_id, ip });
       return { path: '' };
     }
 
@@ -97,7 +97,7 @@ export const replyMessage = async (req: AuthenticatedRequest, res: Response) => 
 
     const roomId = newMessage.conversation_id;
     if (!roomId) {
-      logger.warn("Missing conversation_id after message upload", { sender_id, receiver_id, ip });
+      logger.warn('Missing conversation_id after message upload', { sender_id, receiver_id, ip });
       return res.status(400).json({ error: 'Missing conversation_id' });
     }
 
@@ -107,7 +107,6 @@ export const replyMessage = async (req: AuthenticatedRequest, res: Response) => 
     // Get sender name from the correct table
     let senderName = 'Unknown User';
     try {
-
       const [userResult] = await connection.query<UserRoleRow[]>(
         'SELECT role FROM users WHERE user_id = ?',
         [sender_id]
@@ -144,9 +143,7 @@ export const replyMessage = async (req: AuthenticatedRequest, res: Response) => 
 
         if (nameResult.length > 0) senderName = nameResult[0]!.full_name;
       }
-    } catch (error: any) {
-
-    }
+    } catch (error: any) {}
 
     newMessage.sender_name = senderName;
 
@@ -169,13 +166,13 @@ export const replyMessage = async (req: AuthenticatedRequest, res: Response) => 
       file_url: newMessage.file_url || null,
     });
   } catch (error: any) {
-    logger.error("Unexpected error in replyMessage handler", {
+    logger.error('Unexpected error in replyMessage handler', {
       error,
       ip,
       name: error?.name,
       message: error?.message,
       stack: error?.stack,
-      cause: error?.cause
+      cause: error?.cause,
     });
     res.status(500).json({ error: 'Internal server error' });
   } finally {

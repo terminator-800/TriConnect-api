@@ -23,7 +23,6 @@ export async function createJobseekerTable(connection: Pool | PoolConnection) {
   try {
     await connection.execute(query);
   } catch (error) {
-    throw error; 
+    throw error;
   }
 }
-
