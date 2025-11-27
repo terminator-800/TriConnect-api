@@ -60,7 +60,7 @@ export const apply = async (req: CustomRequest, res: Response) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    await insertJobApplication(connection, job_post_id, sender_id, role);
+    await insertJobApplication(connection, job_post_id, sender_id);
 
     const uploadedFiles = Array.isArray(req.files)
       ? await Promise.all(
@@ -121,7 +121,8 @@ export const apply = async (req: CustomRequest, res: Response) => {
       conversation_id: newMessage.conversation_id,
       file_url: newMessage.file_url,
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error('Error in apply-job-post controller:', (error as Error).message);
     if (connection) await connection.rollback();
     logger.error('Error applying for job and sending message', {
       error,
