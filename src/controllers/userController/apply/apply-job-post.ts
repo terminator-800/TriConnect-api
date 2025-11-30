@@ -156,7 +156,8 @@ export const apply = async (req: CustomRequest, res: Response) => {
       conversation_id: newMessage.conversation_id,
       file_url: newMessage.file_url,
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error('Error in apply-job-post controller:', (error as Error).message);
     if (connection) await connection.rollback();
     console.log(error);
     

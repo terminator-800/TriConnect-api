@@ -16,6 +16,7 @@ export async function insertJobApplication(
 
   // Make sure exactly one job post ID is provided
   const ids = [job_post_id, individual_job_post_id, team_job_post_id].filter(Boolean);
+  
   if (ids.length !== 1) {
     throw new Error('Exactly one job post ID must be provided.');
   }
