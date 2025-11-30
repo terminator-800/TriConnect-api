@@ -68,7 +68,8 @@ export async function getUnappliedMPJobPosts(
         AND i.jobpost_status = 'active'
         AND i.user_id != ?
         AND i.individual_job_post_id NOT IN (
-          SELECT job_post_id FROM job_applications WHERE applicant_id = ?
+          SELECT individual_job_post_id FROM job_applications 
+          WHERE applicant_id = ? AND individual_job_post_id IS NOT NULL
         )
       ORDER BY i.created_at DESC
     `,
@@ -86,7 +87,8 @@ export async function getUnappliedMPJobPosts(
         AND t.jobpost_status = 'active'
         AND t.user_id != ?
         AND t.team_job_post_id NOT IN (
-          SELECT job_post_id FROM job_applications WHERE applicant_id = ?
+          SELECT team_job_post_id FROM job_applications 
+          WHERE applicant_id = ? AND team_job_post_id IS NOT NULL
         )
       ORDER BY t.created_at DESC
     `,

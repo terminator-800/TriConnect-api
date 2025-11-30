@@ -13,14 +13,15 @@ interface ConversationRow extends RowDataPacket {
   business_name?: string;
   agency_name?: string;
   authorized_person?: string;
-  authorized_person_id?: string; // ✅ add this
+  authorized_person_id?: string;
   agency_authorized_person?: string;
-  agency_authorized_person_id?: string; // ✅ add this
+  agency_authorized_person_id?: string;
   message_id?: number;
   message_type?: 'text' | 'file';
   message_text?: string | null;
   file_name?: string | null;
   sent_at?: Date | null;
+  job_title?: string | null; // ✅ add this
 }
 
 // Base conversation type
@@ -30,6 +31,7 @@ interface BaseConversation {
   role: ConversationRow['role'];
   message_text: string;
   sent_at: string | null;
+  job_title?: string | null; // ✅ add this
 }
 
 // Extended types per role
@@ -44,13 +46,13 @@ interface IndividualEmployerConversation extends BaseConversation {
 interface BusinessEmployerConversation extends BaseConversation {
   business_name?: string;
   authorized_person?: string;
-  authorized_profile?: string; // ✅ add this
+  authorized_profile?: string;
 }
 
 interface ManpowerProviderConversation extends BaseConversation {
   agency_name?: string;
   agency_authorized_person?: string;
-  authorized_profile?: string; // ✅ add this
+  authorized_profile?: string;
 }
 
 type UserConversation =
@@ -79,16 +81,26 @@ export const getUserConversations = async (
           mp.agency_name,
 
           be.authorized_person AS authorized_person,
-          be.authorized_person_id AS authorized_person_id,   -- ✅ add this
+          be.authorized_person_id AS authorized_person_id,
 
           mp.agency_authorized_person AS agency_authorized_person,
-          mp.authorized_person_id AS agency_authorized_person_id, -- ✅ add this
+          mp.authorized_person_id AS agency_authorized_person_id,
 
           m.message_id,
           m.message_type,
           LEFT(IFNULL(m.message_text, ''), 30) AS message_text,
           SUBSTRING_INDEX(m.file_url, '/', -1) AS file_name,
-          m.created_at AS sent_at
+          m.created_at AS sent_at,
+
+          (
+              SELECT msg.job_title
+              FROM messages msg
+              WHERE msg.conversation_id = c.conversation_id
+                AND msg.message_type = 'apply'
+                AND msg.job_title IS NOT NULL
+              ORDER BY msg.created_at DESC
+              LIMIT 1
+          ) AS job_title
 
       FROM conversations c
       JOIN users u 
@@ -124,6 +136,7 @@ export const getUserConversations = async (
         role: row.role,
         message_text: preview,
         sent_at: row.sent_at ? format(new Date(row.sent_at), "'at' h:mm a") : null,
+        job_title: row.job_title || null, // ✅ add this
       };
 
       switch (row.role) {

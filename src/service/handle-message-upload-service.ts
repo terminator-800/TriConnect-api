@@ -66,6 +66,13 @@ export const handleMessageUpload = async (
       files
     );
 
+      // Format start_date once at the beginning
+    const formattedStartDate = start_date
+      ? typeof start_date === 'string'
+        ? start_date
+        : start_date.toISOString().slice(0, 19).replace('T', ' ')
+      : null;
+
     // Determine conversation
     const user_small_id = Math.min(sender_id, receiver_id);
     const user_large_id = Math.max(sender_id, receiver_id);
@@ -88,22 +95,14 @@ export const handleMessageUpload = async (
       conversation_id = result.insertId;
     }
 
-    if (
-      full_name ||
-      phone_number ||
-      email_address ||
-      current_address ||
-      cover_letter ||
-      resume ||
-      job_title
-    ) {
+   // FOR JOB APPLICATION - Check for fields unique to job applications
+    if (full_name || current_address || cover_letter || resume) {
       await connection.query(
         `INSERT INTO messages (
           conversation_id, sender_id, receiver_id,
           full_name, phone_number, email_address, current_address, cover_letter, resume, job_title,
           message_type
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-
         [
           conversation_id,
           sender_id,
@@ -119,29 +118,18 @@ export const handleMessageUpload = async (
         ]
       );
     }
-
-    if (
-      employer_name ||
-      company_name ||
-      phone_number ||
-      email_address ||
-      project_location ||
-      start_date ||
-      project_description
-    ) {
-      const formattedStartDate = start_date
-        ? typeof start_date === 'string'
-          ? start_date
-          : start_date.toISOString().slice(0, 19).replace('T', ' ')
-        : null;
+    // FOR REQUEST MANPOWER 
+    
+    else if (employer_name || company_name || project_location || start_date || project_description) {
+      
 
       await connection.query(
         `INSERT INTO messages (
           conversation_id, sender_id, receiver_id,
           employer_name, company_name, phone_number, email_address,
-          project_location, start_date, project_description,
+          project_location, start_date, project_description, job_title,
           message_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           conversation_id,
           sender_id,
@@ -153,10 +141,35 @@ export const handleMessageUpload = async (
           project_location ?? null,
           formattedStartDate,
           project_description ?? null,
+          job_title ?? null,
           'request',
         ]
       );
     }
+    //  else if (employer_name || project_location || start_date || project_description) {
+    //   const formattedStartDate = start_date;
+
+    //   await connection.query(
+    //     `INSERT INTO messages (
+    //       conversation_id, sender_id, receiver_id,
+    //       employer_name, phone_number, email_address,
+    //       project_location, start_date, project_description,
+    //       message_type
+    //     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    //     [
+    //       conversation_id,
+    //       sender_id,
+    //       receiver_id,
+    //       employer_name ?? null,
+    //       phone_number ?? null,
+    //       email_address ?? null,
+    //       project_location ?? null,
+    //       formattedStartDate,
+    //       project_description ?? null,
+    //       'request',
+    //     ]
+    //   );
+    // }
 
     // Insert optional text message
     if (message && message.trim() !== '') {

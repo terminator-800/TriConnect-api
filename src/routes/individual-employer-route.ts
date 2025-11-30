@@ -26,6 +26,7 @@ import { changeProfile } from '../controllers/userController/change-profile/chan
 import { changeUserProfile } from './../middleware/upload-files.js';
 import { editJobPost } from '../controllers/job-post-controller/update-job-post/edit-job-post.js';
 import { getNotified } from '../controllers/userController/notification/get-notified.js';
+import { apply } from '../controllers/userController/apply/apply-job-post.js';
 
 const router = express.Router();
 
@@ -60,5 +61,6 @@ router.patch(
 router.patch('/individual-employer/change-profile', authenticate, changeUserProfile, changeProfile);
 router.put('/individual-employer/edit-job-post/:job_post_id', authenticate, editJobPost);
 router.get('/individual-employer/notification', authenticate, getNotified);
+router.post('/individual-employer/requests', authenticate, apply);
 
 export default router;
