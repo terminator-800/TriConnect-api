@@ -1,0 +1,23 @@
+===== ADMIN =========
+email:	  triconnect@gmail.com
+password: 122899
+=====================
+
+==== JOBSEEKER =======
+email:	  jobseeker@gmail.com
+password: @Long09460645579
+=======================
+
+==== EMPLOYER =======
+Business
+email:	  employerbesiness@gmail.com
+password: @Long09460645579
+Individual
+email:	  employerindividual@gmail.com
+password: @Long09460645579
+=======================
+
+==== MAN POWER =======
+email:	  manpower@gmail.com
+password: @Long09460645579
+======================
