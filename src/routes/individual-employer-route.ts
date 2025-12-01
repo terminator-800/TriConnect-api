@@ -28,6 +28,7 @@ import { editJobPost } from '../controllers/job-post-controller/update-job-post/
 import { getNotified } from '../controllers/userController/notification/get-notified.js';
 import { markNotificationSeen } from '../controllers/userController/notification/seen-notification.js';
 import { apply } from '../controllers/userController/apply/apply-job-post.js';
+import { hireApplicant } from '../controllers/userController/hire-applicant/hire-applicant.js';
 
 const router = express.Router();
 
@@ -68,5 +69,6 @@ router.patch(
   markNotificationSeen
 );
 router.post('/individual-employer/requests', authenticate, apply);
+router.post('/individual-employer/hire-applicant', authenticate, hireApplicant);
 
 export default router;

@@ -40,7 +40,7 @@ import { createReportsTable } from './schema/reports-schema.js';
 import { createReportProofsTable } from './schema/report-proof-schema.js';
 import { createFeedbackTable } from './schema/feedback-schema.js';
 import { createNotificationTable } from './schema/notification-schema.js';
-
+import { createHiresTable } from './schema/hires-schema.js';
 // Routes
 import jobseekerRoute from './routes/jobseeker-route.js';
 import businessEmployerRoute from './routes/business-employer-route.js';
@@ -91,7 +91,8 @@ async function startServer() {
     await createFeedbackTable(connection);
     await createNotificationTable(connection);
     await createAdministrator();
-
+    await createHiresTable(connection);
+    
     app.locals.db = connection;
 
     const port = process.env.API_PORT || 3001;

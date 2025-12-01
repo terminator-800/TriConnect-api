@@ -7,7 +7,8 @@ type NotificationType =
   | 'job_post_status'
   | 'account_verification'
   | 'report'
-  | 'system';
+  | 'system'
+  | 'hire';
 
 export async function notifyUser(
   user_id: number, // Who receives the notification

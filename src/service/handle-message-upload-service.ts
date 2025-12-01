@@ -1,5 +1,6 @@
 import type { PoolConnection, RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 import logger from '../config/logger.js';
+import { notifyUser } from '../controllers/userController/notification/notify-user.js';
 
 interface FileUpload {
   path: string;
@@ -19,13 +20,16 @@ interface HandleMessageUploadParams {
   company_name?: string;
   project_location?: string;
   start_date?: string | Date;
+  end_date?: string | Date; 
   project_description?: string;
+  hire_message?: string;
   resume?: FileUpload;
   files?: FileUpload[];
 }
 
 export const handleMessageUpload = async (
   connection: PoolConnection,
+  req: any, 
   params: HandleMessageUploadParams
 ) => {
   try {
@@ -43,9 +47,11 @@ export const handleMessageUpload = async (
       company_name,
       project_location,
       start_date,
+      end_date,
       project_description,
       resume,
       files,
+      hire_message,
     } = params;
     console.log(
       sender_id,
@@ -61,9 +67,11 @@ export const handleMessageUpload = async (
       company_name,
       project_location,
       start_date,
+      end_date,
       project_description,
       resume,
-      files
+      files,
+      hire_message
     );
 
       // Format start_date once at the beginning
@@ -71,6 +79,12 @@ export const handleMessageUpload = async (
       ? typeof start_date === 'string'
         ? start_date
         : start_date.toISOString().slice(0, 19).replace('T', ' ')
+      : null;
+
+       const formattedEndDate = end_date
+      ? typeof end_date === 'string'
+        ? end_date
+        : end_date.toISOString().slice(0, 19).replace('T', ' ')
       : null;
 
     // Determine conversation
@@ -94,9 +108,13 @@ export const handleMessageUpload = async (
       );
       conversation_id = result.insertId;
     }
+  
+    const io = req.app.get('io');
+    const userSocketMap = req.app.get('userSocketMap');
+    const socketId = userSocketMap[sender_id];
 
-   // FOR JOB APPLICATION - Check for fields unique to job applications
-    if (full_name || current_address || cover_letter || resume) {
+   // FOR JOB APPLICATION 
+    if (full_name && current_address && cover_letter && resume) {
       await connection.query(
         `INSERT INTO messages (
           conversation_id, sender_id, receiver_id,
@@ -117,12 +135,58 @@ export const handleMessageUpload = async (
           'apply',
         ]
       );
-    }
-    // FOR REQUEST MANPOWER 
-    
-    else if (employer_name || company_name || project_location || start_date || project_description) {
+          try {
+            if (socketId) {
+              io.to(socketId).emit('notification', {
+                title: 'NEW APPLICATION',
+                message: `${full_name} applied for ${job_title}. Check your messages for details.`,
+                type: 'job_application',
+                notifier_id: sender_id,
+                created_at: new Date(),
+              });
+            }
+          } catch (socketError) {
+            console.error('Failed to emit socket notification', { 
+              sender_id, 
+              socketError 
+            });
+          }
       
+          await notifyUser(
+            receiver_id,
+            'NEW APPLICATION',
+            `${full_name} applied for ${job_title}. Check your messages for details.`,
+            'job_application',
+            sender_id
+          );
+    }
+    // FOR HIRE REQUEST
+    // NAA NANI NOTIF
+    else if (start_date && end_date && hire_message) {
+      await connection.query(
+        `INSERT INTO messages (
+          conversation_id, sender_id, receiver_id,
+          employer_name, full_name, job_title, start_date, end_date,
+          hire_message, message_type
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          conversation_id,
+          sender_id,
+          receiver_id,
+          employer_name ?? null,
+          full_name ?? null,
+          job_title ?? null,
+          formattedStartDate,
+          formattedEndDate,
+          hire_message ?? null,
+          'hire',
+        ]
+      );
+    }
 
+    // FOR REQUEST MANPOWER
+    // NO NOTIF YET
+    else if (employer_name && company_name && project_location && project_description) {
       await connection.query(
         `INSERT INTO messages (
           conversation_id, sender_id, receiver_id,
@@ -146,30 +210,7 @@ export const handleMessageUpload = async (
         ]
       );
     }
-    //  else if (employer_name || project_location || start_date || project_description) {
-    //   const formattedStartDate = start_date;
-
-    //   await connection.query(
-    //     `INSERT INTO messages (
-    //       conversation_id, sender_id, receiver_id,
-    //       employer_name, phone_number, email_address,
-    //       project_location, start_date, project_description,
-    //       message_type
-    //     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    //     [
-    //       conversation_id,
-    //       sender_id,
-    //       receiver_id,
-    //       employer_name ?? null,
-    //       phone_number ?? null,
-    //       email_address ?? null,
-    //       project_location ?? null,
-    //       formattedStartDate,
-    //       project_description ?? null,
-    //       'request',
-    //     ]
-    //   );
-    // }
+   
 
     // Insert optional text message
     if (message && message.trim() !== '') {

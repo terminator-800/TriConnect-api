@@ -17,16 +17,18 @@ export async function createUsersTable(connection: Pool | PoolConnection) {
       email VARCHAR(100) NOT NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
       profile VARCHAR(255), 
-
-      -- Token to manage single active session
       current_token VARCHAR(255) DEFAULT NULL,
-
-      -- Account status fields
       account_status ENUM('active', 'restricted', 'blocked', 'suspended', 'banned') DEFAULT 'active',
       status_reason TEXT,
       status_updated_at DATETIME DEFAULT NULL,
+      employment_status ENUM('available', 'hired', 'member') DEFAULT 'available',
+      employed_start_date DATE NULL,
+      employed_end_date DATE NULL,
+      employer_id INT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      FOREIGN KEY (employer_id) REFERENCES users(user_id) ON DELETE SET NULL
+
     );
   `;
 

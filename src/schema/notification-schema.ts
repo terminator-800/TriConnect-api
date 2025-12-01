@@ -19,7 +19,8 @@ export async function createNotificationTable(connection: Pool | PoolConnection)
             'job_post_status',
             'account_verification',
             'report',
-            'system'
+            'system',
+            'hire'
         ) NOT NULL,
 
         -- Title + content

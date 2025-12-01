@@ -78,24 +78,24 @@ export const apply = async (req: CustomRequest, res: Response) => {
   }
 
      if (job_post_id) {
-    await insertJobApplication(connection, {
-      job_post_id: Number(job_post_id),
-      table_name: "job_post",
-      applicant_id: sender_id,
-    });
-  } else if (individual_job_post_id) {
-    await insertJobApplication(connection, {
-      individual_job_post_id: Number(individual_job_post_id),
-      table_name: "individual_job_post",
-      applicant_id: sender_id,
-    });
-  } else if (team_job_post_id) {
-    await insertJobApplication(connection, {
-      team_job_post_id: Number(team_job_post_id),
-      table_name: "team_job_post",
-      applicant_id: sender_id,
-    });
-  }
+      await insertJobApplication(connection, {
+        job_post_id: Number(job_post_id),
+        table_name: "job_post",
+        applicant_id: sender_id,
+        });
+      } else if (individual_job_post_id) {
+        await insertJobApplication(connection, {
+          individual_job_post_id: Number(individual_job_post_id),
+          table_name: "individual_job_post",
+          applicant_id: sender_id,
+        });
+      } else if (team_job_post_id) {
+        await insertJobApplication(connection, {
+          team_job_post_id: Number(team_job_post_id),
+          table_name: "team_job_post",
+          applicant_id: sender_id,
+        });
+      }
 
     const uploadedFiles = Array.isArray(req.files)
       ? await Promise.all(
@@ -106,7 +106,7 @@ export const apply = async (req: CustomRequest, res: Response) => {
         )
       : [];
 
-    const newMessage: Message = await handleMessageUpload(connection, {
+    const newMessage: Message = await handleMessageUpload(connection, req, {
       sender_id,
       receiver_id,
       cover_letter,
