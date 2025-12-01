@@ -45,6 +45,16 @@ function initializeSocket(server: any, userSocketMap: UserSocketMap) {
   };
 
   io.on('connection', (socket: Socket) => {
+    console.log(`New client connected: ${socket.id}`);
+
+    //Notification room for all connected users
+    socket.join('notifications');
+
+    // Client sends notification to all connected users
+    socket.on('sendGlobalNotification', () => {
+      io.to('notifications').emit('notification', { hasNewNotification: true });
+    });
+
     socket.on('joinRoom', (roomId: string | number) => {
       if (!roomId) return socket.join(roomId.toString());
     });

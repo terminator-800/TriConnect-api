@@ -16,6 +16,7 @@ import { getUserProfile } from '../controllers/userController/user-profile/user-
 import { authenticate } from '../middleware/authenticate.js';
 import { getDashboardSummary } from '../controllers/administrator-controller/get-chart-data/get-dashboard-summary.js';
 import { getNotified } from '../controllers/userController/notification/get-notified.js';
+import { markNotificationSeen } from '../controllers/userController/notification/seen-notification.js';
 
 const router = express.Router();
 
@@ -35,5 +36,10 @@ router.post('/administrator/dismiss-report', authenticate, dismissReport);
 router.get('/administrator/user-feedbacks', authenticate, usersFeedbacks);
 router.get('/administrator/chart-data', authenticate, getDashboardSummary);
 router.get('/administrator/notification', authenticate, getNotified);
+router.patch(
+  '/administrator/notification/:notification_id/seen',
+  authenticate,
+  markNotificationSeen
+);
 
 export default router;

@@ -29,7 +29,7 @@ export const getNotified = async (req: CustomRequest, res: Response) => {
       `
       SELECT notification_id, title, message, created_at, is_read, notifier_id, type
       FROM notifications
-      WHERE user_id = ?
+      WHERE user_id = ? AND is_read = FALSE
       ORDER BY created_at DESC
       `,
       [user_id]
