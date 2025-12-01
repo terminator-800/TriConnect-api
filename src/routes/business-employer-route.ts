@@ -26,6 +26,7 @@ import { changeUserProfile } from '../middleware/upload-files.js';
 import { changeProfile } from '../controllers/userController/change-profile/change-profile.js';
 import { editJobPost } from '../controllers/job-post-controller/update-job-post/edit-job-post.js';
 import { getNotified } from '../controllers/userController/notification/get-notified.js';
+import { markNotificationSeen } from '../controllers/userController/notification/seen-notification.js';
 import { getAgencyPostsController } from '../controllers/job-post-controller/get-manpower-provider-posts/manpower-provider-posts.js';
 import { apply } from '../controllers/userController/apply/apply-job-post.js';
 
@@ -62,6 +63,11 @@ router.patch(
 router.patch('/business-employer/change-profile', authenticate, changeUserProfile, changeProfile);
 router.put('/business-employer/edit-job-post/:job_post_id', authenticate, editJobPost);
 router.get('/business-employer/notification', authenticate, getNotified);
+router.patch(
+  '/business-employer/notification/:notification_id/seen',
+  authenticate,
+  markNotificationSeen
+);
 router.get('/business-employer/manpower-posts', authenticate, getAgencyPostsController);
 router.post('/business-employer/requests', authenticate, apply);
 

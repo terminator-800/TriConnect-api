@@ -20,6 +20,7 @@ import { submitFeedback } from '../controllers/userController/submit-feedback/su
 import { changeUserProfile } from '../middleware/upload-files.js';
 import { changeProfile } from '../controllers/userController/change-profile/change-profile.js';
 import { getNotified } from '../controllers/userController/notification/get-notified.js';
+import { markNotificationSeen } from '../controllers/userController/notification/seen-notification.js';
 
 const router = express.Router();
 
@@ -44,5 +45,6 @@ router.get('/jobseeker/reported-users', authenticate, reportedUsers);
 router.post('/jobseeker/feedback', authenticate, submitFeedback);
 router.patch('/jobseeker/change-profile', authenticate, changeUserProfile, changeProfile);
 router.get('/jobseeker/notification', authenticate, getNotified);
+router.patch('/jobseeker/notification/:notification_id/seen', authenticate, markNotificationSeen);
 
 export default router;
