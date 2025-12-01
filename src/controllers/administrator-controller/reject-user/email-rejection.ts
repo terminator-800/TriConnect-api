@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import logger from '../../../config/logger.js';
+import sendMail from '../../../service/email-handler.js';
 
 const { EMAIL_USER, EMAIL_PASS, CLIENT_ORIGIN } = process.env;
 
@@ -8,25 +9,27 @@ if (!EMAIL_USER || !EMAIL_PASS) {
   process.exit(1);
 }
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS,
-  },
-});
+// const transporter = nodemailer.createTransport({
+//   service: 'gmail',
+//   auth: {
+//     user: EMAIL_USER,
+//     pass: EMAIL_PASS,
+//   },
+// });
 
 /**
  * Sends an email to a user.
  */
 export async function sendUserEmail(to: string, subject: string, htmlContent: string) {
   try {
-    await transporter.sendMail({
-      from: `"TriConnect" <${EMAIL_USER}>`,
-      to,
-      subject,
-      html: htmlContent,
-    });
+    // await transporter.sendMail({
+    //   from: `"TriConnect" <${EMAIL_USER}>`,
+    //   to,
+    //   subject,
+    //   html: htmlContent,
+    // });
+
+    await sendMail(to, subject, htmlContent);
     logger.info(`Email sent to ${to} with subject "${subject}"`);
   } catch (error: any) {
     logger.error(`Failed to send email to ${to}`, { error });

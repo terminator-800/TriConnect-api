@@ -7,6 +7,7 @@ import pool from '../../../config/database-connection.js';
 import logger from '../../../config/logger.js';
 import nodemailer from 'nodemailer';
 import { notifyUser } from '../../userController/notification/notify-user.js';
+import sendMail from '../../../service/email-handler.js';
 
 const { EMAIL_USER, EMAIL_PASS, CLIENT_ORIGIN } = process.env;
 
@@ -15,13 +16,13 @@ if (!EMAIL_USER || !EMAIL_PASS || !CLIENT_ORIGIN) {
   process.exit(1);
 }
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS,
-  },
-});
+// const transporter = nodemailer.createTransport({
+//   service: 'gmail',
+//   auth: {
+//     user: EMAIL_USER,
+//     pass: EMAIL_PASS,
+//   },
+// });
 
 export const verifyUser = async (req: CustomRequest, res: Response) => {
   const user_id = req.params.user_id;
@@ -98,12 +99,13 @@ export const verifyUser = async (req: CustomRequest, res: Response) => {
     `;
 
     try {
-      await transporter.sendMail({
-        from: `"TriConnect" <${EMAIL_USER}>`,
-        to: userEmail,
-        subject: emailSubject,
-        html: htmlMessage,
-      });
+      // await transporter.sendMail({
+      //   from: `"TriConnect" <${EMAIL_USER}>`,
+      //   to: userEmail,
+      //   subject: emailSubject,
+      //   html: htmlMessage,
+      // });
+      await sendMail(userEmail, emailSubject, htmlMessage);
     } catch (emailError) {
       logger.error('Failed to send approval email', { email: userEmail, emailError });
     }

@@ -11,6 +11,7 @@ import bcrypt from 'bcrypt';
 import logger from '../../../config/logger.js';
 import pool from '../../../config/database-connection.js';
 import jwt from 'jsonwebtoken';
+import sendMail from '../../../service/email-handler.js';
 
 const { CLIENT_ORIGIN, JWT_SECRET, EMAIL_USER, EMAIL_PASS } = process.env;
 
@@ -19,13 +20,13 @@ if (!CLIENT_ORIGIN || !JWT_SECRET || !EMAIL_USER || !EMAIL_PASS) {
   process.exit(1);
 }
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: EMAIL_USER,
-    pass: EMAIL_PASS,
-  },
-});
+// const transporter = nodemailer.createTransport({
+//   service: 'gmail',
+//   auth: {
+//     user: EMAIL_USER,
+//     pass: EMAIL_PASS,
+//   },
+// });
 
 const allowedRoles: Partial<Record<keyof typeof ROLE, string>> = {
   [ROLE.BUSINESS_EMPLOYER]: 'business employer',
@@ -160,12 +161,14 @@ export const registerUser = async (
         </table>
     `;
 
-    await transporter.sendMail({
-      from: `"TriConnect" <${EMAIL_USER}>`,
-      to: email,
-      subject: emailSubject,
-      html: htmlMessage,
-    });
+    // await transporter.sendMail({
+    //   from: `"TriConnect" <${EMAIL_USER}>`,
+    //   to: email,
+    //   subject: emailSubject,
+    //   html: htmlMessage,
+    // });
+
+    await sendMail(email, emailSubject, htmlMessage);
 
     return response.status(201).json({
       message: 'Verification email sent. Please check your inbox.',

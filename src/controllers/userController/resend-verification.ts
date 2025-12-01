@@ -5,17 +5,18 @@ import nodemailer from 'nodemailer';
 import logger from '../../config/logger.js';
 import pool from '../../config/database-connection.js';
 import jwt from 'jsonwebtoken';
+import sendMail from '../../service/email-handler.js';
 
 const { JWT_SECRET, EMAIL_USER, EMAIL_PASS, API_BASE_URL } = process.env;
 
 // Nodemailer transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: EMAIL_USER!,
-    pass: EMAIL_PASS!,
-  },
-});
+// const transporter = nodemailer.createTransport({
+//   service: 'gmail',
+//   auth: {
+//     user: EMAIL_USER!,
+//     pass: EMAIL_PASS!,
+//   },
+// });
 
 // Mapping of roles to human-readable names
 const allowedRoles: Record<string, string> = {
@@ -75,12 +76,14 @@ export const resendVerification: RequestHandler = async (req: Request, res: Resp
       <p>This link will expire in 1 hour.</p>
     `;
 
-    await transporter.sendMail({
-      from: `"TriConnect" <${EMAIL_USER}>`,
-      to: email,
-      subject,
-      html,
-    });
+    // await transporter.sendMail({
+    //   from: `"TriConnect" <${EMAIL_USER}>`,
+    //   to: email,
+    //   subject,
+    //   html,
+    // });
+
+    await sendMail(email, subject, html);
 
     return res.status(200).json({ message: 'Verification email resent.' });
   } catch (error: any) {

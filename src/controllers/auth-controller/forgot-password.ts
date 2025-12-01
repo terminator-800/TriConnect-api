@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import pool from '../../config/database-connection.js';
 import nodemailer from 'nodemailer';
 import logger from '../../config/logger.js';
+import sendMail from '../../service/email-handler.js';
 
 type Role = (typeof ROLE)[keyof typeof ROLE];
 
@@ -59,20 +60,26 @@ export const forgotPassword: RequestHandler = async (req: Request, res: Response
 
     const resetLink = `${process.env.CLIENT_ORIGIN ?? 'http://localhost:5173'}/forgot-password/reset-password?token=${token}`;
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER!,
-        pass: process.env.EMAIL_PASS!,
-      },
-    });
+    // const transporter = nodemailer.createTransport({
+    //   service: 'gmail',
+    //   auth: {
+    //     user: process.env.EMAIL_USER!,
+    //     pass: process.env.EMAIL_PASS!,
+    //   },
+    // });
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER!,
-      to: email,
-      subject: 'Password Reset Request',
-      html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 10 minutes.</p>`,
-    });
+    // await transporter.sendMail({
+    //   from: process.env.EMAIL_USER!,
+    //   to: email,
+    //   subject: 'Password Reset Request',
+    //   html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 10 minutes.</p>`,
+    // });
+
+    const to = email;
+    const subject = 'Password Reset Request';
+    const html = `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 10 minutes.</p>`;
+
+    await sendMail(to, subject, html);
 
     await connection.commit();
 
