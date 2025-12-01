@@ -5,6 +5,7 @@ import type { PoolConnection } from 'mysql2/promise';
 import { ROLE } from '../../../utils/roles.js';
 import logger from '../../../config/logger.js';
 import pool from '../../../config/database-connection.js';
+import { notifyUser } from '../notification/notify-user.js';
 
 interface FeedbackRequestBody {
   message: string;
@@ -52,6 +53,15 @@ export const submitFeedback = async (req: FeedbackRequest, res: Response): Promi
     }
 
     const feedback = await saveFeedback(connection, user_id, message);
+
+    //Push notification to admin could be added here
+    const userId = 1;
+    const title = 'NEW FEEDBACK SUBMITTED';
+    const notificationMessage = `You have received new feedback check in the user feedback section.`;
+    const type = 'system';
+
+    await notifyUser(userId, title, notificationMessage, type);
+
     await connection.commit();
 
     return res.status(201).json({
