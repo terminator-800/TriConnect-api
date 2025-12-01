@@ -1,12 +1,20 @@
 import pool from '../../../config/database-connection.js';
 import logger from '../../../config/logger.js';
 
+type NotificationType =
+  | 'message'
+  | 'job_application'
+  | 'job_post_status'
+  | 'account_verification'
+  | 'report'
+  | 'system';
+
 export async function notifyUser(
   user_id: number, // Who receives the notification
-  title: string,
-  message: string,
-  type: 'account_verification' | 'system' | 'job' | 'message' = 'system',
-  notifier_id: number | null = null // Who triggered the notification (optional)
+  title: string, // Notification title
+  message: string, // Notification message
+  type: NotificationType, // Type of notification
+  notifier_id: number | null = null // Who triggered the notification
 ) {
   let connection;
   try {

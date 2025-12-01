@@ -1,6 +1,7 @@
 import type { Router, Request, Response } from 'express';
 import pool from '../../../config/database-connection.js';
 import logger from '../../../config/logger.js';
+import { notifyUser } from '../../userController/notification/notify-user.js';
 
 const JOB_POST_TABLES = {
   hiring: { table: 'job_post', pk: 'job_post_id' },
@@ -11,6 +12,7 @@ const JOB_POST_TABLES = {
 interface RejectPostResult {
   success: boolean;
   message: string;
+  userId?: number;
 }
 
 async function rejectPost(
@@ -25,12 +27,14 @@ async function rejectPost(
     return { success: false, message: `${table} record not found.` };
   }
 
+  const userId = rows[0].user_id;
+
   await connection.query(
     `UPDATE ${table} SET status = 'rejected', is_verified_jobpost = FALSE WHERE ${pkColumn} = ?`,
     [id]
   );
 
-  return { success: true, message: `${table} record rejected successfully.` };
+  return { success: true, message: `${table} record rejected successfully.`, userId };
 }
 
 type JobPostType = keyof typeof JOB_POST_TABLES;
@@ -65,6 +69,13 @@ export const rejectAnyJobPost = async (req: Request, res: Response) => {
       res.status(404).json({ error: result.message });
       return;
     }
+
+    const userId = result.userId!;
+    const title = 'JOB POST REJECTED';
+    const message = `Unfortunately, your job post has been rejected. Please review the guidelines and try again.`;
+    const type = 'job_post_status';
+
+    await notifyUser(userId, title, message, type);
 
     res.status(200).json({ message: result.message });
   } catch (error: any) {

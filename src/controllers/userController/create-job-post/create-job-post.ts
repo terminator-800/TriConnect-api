@@ -4,6 +4,7 @@ import { createJobPosts } from '../../userController/create-job-post/create-job-
 import { ROLE } from '../../../utils/roles.js';
 import logger from '../../../config/logger.js';
 import pool from '../../../config/database-connection.js';
+import { notifyUser } from '../notification/notify-user.js';
 
 // Request body type
 interface CreateJobPostBody {
@@ -77,6 +78,13 @@ export const createJobPost = async (
       required_skill,
       job_description,
     });
+
+    const userId = 1; // user id for recipient of the notification and this is ADMIN account
+    const title = 'NEW JOB POST CREATED';
+    const message = `A new job post has been submitted  and is pending for verification. Please review the job details and approve or reject it`;
+    const type = 'job_post_status';
+
+    await notifyUser(userId, title, message, type);
 
     if ('error' in result) {
       logger.warn('Validation or service error returned from createJobPosts', {

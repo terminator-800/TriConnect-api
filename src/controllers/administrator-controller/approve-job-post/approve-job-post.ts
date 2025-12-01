@@ -1,6 +1,7 @@
 import type { Router, Request, Response } from 'express';
 import pool from '../../../config/database-connection.js';
 import logger from '../../../config/logger.js';
+import { notifyUser } from '../../userController/notification/notify-user.js';
 
 const JOB_POST_TABLES = {
   hiring: { table: 'job_post', pk: 'job_post_id' },
@@ -11,6 +12,7 @@ const JOB_POST_TABLES = {
 interface ApprovePostResult {
   success: boolean;
   message: string;
+  userId?: number;
 }
 
 async function approvePost(
@@ -25,6 +27,8 @@ async function approvePost(
     return { success: false, message: `${table} record not found.` };
   }
 
+  const userId = rows[0].user_id;
+
   await connection.query(
     `UPDATE ${table} 
        SET status = 'approved', 
@@ -36,7 +40,7 @@ async function approvePost(
     [id]
   );
 
-  return { success: true, message: `${table} record approved successfully.` };
+  return { success: true, message: `${table} record approved successfully.`, userId };
 }
 
 type JobPostType = keyof typeof JOB_POST_TABLES;
@@ -71,6 +75,14 @@ export const approveAnyJobPost = async (req: Request, res: Response) => {
       res.status(404).json({ error: result.message });
       return;
     }
+
+    //Push notification to user that their job post is approved
+    const userId = result.userId!;
+    const title = 'JOB POST APPROVED';
+    const message = `Congratulations! Your job post has been approved and is now active.`;
+    const type = 'job_post_status';
+
+    await notifyUser(userId, title, message, type);
 
     res.status(200).json({ message: result.message });
   } catch (error: any) {

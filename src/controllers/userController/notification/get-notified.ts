@@ -27,7 +27,14 @@ export const getNotified = async (req: CustomRequest, res: Response) => {
 
     const [rows] = await connection.query<Notification[]>(
       `
-      SELECT notification_id, title, message, created_at, is_read, notifier_id, type
+      SELECT 
+        notification_id, 
+        title, 
+        message, 
+        CONVERT_TZ(created_at, '+00:00', '+08:00') as created_at,
+        is_read, 
+        notifier_id, 
+        type
       FROM notifications
       WHERE user_id = ? AND is_read = FALSE
       ORDER BY created_at DESC

@@ -31,6 +31,7 @@ try {
     waitForConnections: true,
     connectionLimit: 5,
     queueLimit: 0,
+    timezone: '+08:00',
   });
 
   logger.info('Database pool created successfully');

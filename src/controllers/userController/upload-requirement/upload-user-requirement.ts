@@ -7,6 +7,7 @@ import { ROLE } from '../../../utils/roles.js';
 import logger from '../../../config/logger.js';
 import pool from '../../../config/database-connection.js';
 import jwt from 'jsonwebtoken';
+import { notifyUser } from '../notification/notify-user.js';
 
 // Simple JWT payload type
 interface JwtPayload {
@@ -187,6 +188,21 @@ export const uploadRequirement = async (req: Request, res: Response) => {
     }
 
     await uploadUserRequirement(connection, payload);
+
+    // Push notification to admin for account verification
+    const title = 'NEW REQUIREMENT UPLOADED';
+    const message = `A new user uploaded their requirements and is pending for verification. Please review the details and verify the account.`;
+    const type = 'account_verification';
+    const adminId = 1;
+
+    // user_id: number, // Who receives the notification
+    // title: string, // Notification title
+    // message: string, // Notification message
+    // type: NotificationType, // Type of notification
+    // notifier_id: number | null = null // Who triggered the no
+
+    await notifyUser(adminId, title, message, type);
+
     await connection.commit();
     return res.status(200).json({ message: `${role} requirements uploaded successfully` });
   } catch (error: any) {
