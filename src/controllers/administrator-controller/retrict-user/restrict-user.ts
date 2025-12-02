@@ -5,6 +5,8 @@ import type { Response } from 'express';
 import { ROLE } from '../../../utils/roles.js';
 import logger from '../../../config/logger.js';
 import pool from '../../../config/database-connection.js';
+import { notifyUser } from '../../userController/notification/notify-user.js';
+import sendMail from '../../../service/email-handler.js';
 
 interface RestrictUserBody {
   user_id: string | number;
@@ -30,6 +32,26 @@ export const restrictUser = async (req: CustomRequest, res: Response): Promise<v
     await connection.beginTransaction();
 
     await restrictUserInDB(connection, user_id, reason);
+
+    // Fetch the reported user's email
+    const [userRows]: any = await connection.query(`SELECT email FROM users WHERE user_id = ?`, [
+      user_id,
+    ]);
+    const reportedUserEmail = userRows[0]?.email;
+
+    //Push notification and send an email to the restricted user
+    const title = 'ACCOUNT RESTRICTED';
+    const message = `Your account has been restricted by an administrator. Reason: ${reason || 'N/A'}`;
+    const type = 'report';
+
+    const to = reportedUserEmail;
+    const subject = 'Account Restriction Notice';
+    const html = `<p>Dear User,</p><p>Your account has been restricted by an administrator. Reason: ${reason || 'N/A'}.</p><p>Please contact support if you have any questions.</p>`;
+
+    await Promise.all([
+      sendMail(to, subject, html),
+      notifyUser(Number(user_id), title, message, type),
+    ]);
 
     await connection.commit();
 

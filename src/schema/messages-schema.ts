@@ -22,7 +22,6 @@ export async function createMessagesTable(connection: Pool | PoolConnection) {
       project_location VARCHAR(255) NULL,
       start_date DATE NULL,
       end_date DATE NULL,
-      start_date DATE NULL,
       project_description TEXT NULL,
       message_type ENUM('text', 'image', 'file', 'apply', 'request', 'hire') DEFAULT 'text',
       file_url VARCHAR(255) NULL,
