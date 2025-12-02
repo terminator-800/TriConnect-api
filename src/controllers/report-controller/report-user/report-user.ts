@@ -6,6 +6,8 @@ import { uploadToCloudinary } from '../../../utils/upload-to-cloudinary.js';
 import { insertNewReport } from './insert-new-report.js';
 import logger from '../../../config/logger.js';
 import pool from '../../../config/database-connection.js';
+import { notifyUser } from '../../userController/notification/notify-user.js';
+import sendMail from '../../../service/email-handler.js';
 
 interface ReportUserRequest extends Request {
   user?: AuthenticatedUser;
@@ -51,6 +53,12 @@ export const reportUser = async (req: ReportUserRequest, res: Response) => {
       return res.status(409).json({ error: 'You have already reported this user.' });
     }
 
+    // Fetch the reported user's email
+    const [userRows]: any = await connection.query(`SELECT email FROM users WHERE user_id = ?`, [
+      reportedUserId,
+    ]);
+    const reportedUserEmail = userRows[0]?.email;
+
     // Insert new report entry
     const reportId: number = await insertNewReport(
       connection,
@@ -75,7 +83,33 @@ export const reportUser = async (req: ReportUserRequest, res: Response) => {
       );
     }
 
+    //Push notification to admins about new report
+    const adminId = 1;
+    const adminNotifTitle = 'NEW USER REPORT';
+    const adminNotificationMessage = `A someone submitted a report and pending your review.`;
+    const type = 'report';
+
+    const userBeingReportedId = reportedUserId;
+    const userNotifTitle = 'YOU HAVE BEEN REPORTED';
+    const userNotificationMessage = `You have been reported for the following reason: ${reason}. Please contact support if you have any questions.`;
+
+    const tasks: Promise<any>[] = [
+      notifyUser(adminId, adminNotifTitle, adminNotificationMessage, type),
+      notifyUser(userBeingReportedId, userNotifTitle, userNotificationMessage, type),
+    ];
+    // email to the reported user could be added here
+    if (reportedUserEmail) {
+      // Placeholder for sending email logic
+      const to = reportedUserEmail;
+      const subject = 'You have been reported';
+      const html = `<p>Dear User,</p><p>You have been reported for the following reason: ${reason}.</p><p>Please contact support if you have any questions.</p>`;
+      tasks.push(sendMail(to, subject, html));
+    }
+
+    await Promise.all(tasks);
+
     await connection.commit();
+
     res.status(200).json({ message: 'Report submitted successfully.' });
   } catch (error) {
     if (connection) {
