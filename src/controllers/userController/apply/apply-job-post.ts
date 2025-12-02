@@ -60,7 +60,9 @@ export const apply = async (req: CustomRequest, res: Response) => {
     connection = await pool.getConnection();
     await connection.beginTransaction();
         // Determine which job_post_id to use and prepare params
-    console.log(job_post_id,"jobpostid", individual_job_post_id,'individualjobpostid', team_job_post_id,'teamjobpostid');
+    console.log("jobpostid",job_post_id, 
+                'individualjobpostid', individual_job_post_id, 
+                'teamjobpostid',team_job_post_id,);
     
     const ids = {
     job_post_id,

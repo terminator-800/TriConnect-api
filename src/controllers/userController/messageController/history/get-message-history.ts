@@ -8,7 +8,7 @@ interface MessageRow extends RowDataPacket {
   conversation_id: number;
   sender_id: number;
   receiver_id: number;
-  message_type: 'text' | 'file';
+  message_type: 'text' | 'file' | 'apply' | 'request' | 'hire';
   message_text?: string | null;
   file_url?: string | null;
   created_at: Date;
@@ -18,6 +18,10 @@ interface MessageRow extends RowDataPacket {
 
   receiver_role: 'jobseeker' | 'individual-employer' | 'business-employer' | 'manpower-provider';
   receiver_name: string;
+
+  // Hire-related fields
+  hire_status?: 'pending' | 'accepted' | 'rejected' | 'active' | 'completed' | 'terminated' | null;
+  hire_id?: number | null;
 }
 
 export interface FormattedMessage extends Omit<MessageRow, 'created_at'> {
@@ -50,7 +54,11 @@ export const getMessageHistoryByConversationId = async (
         ie_receiver.full_name,
         mp_receiver.agency_authorized_person,
         js_receiver.full_name
-      ) AS receiver_name
+      ) AS receiver_name,
+
+      -- Hire status (JOIN with hires table)
+      h.status AS hire_status,
+      h.hire_id
 
     FROM messages m
 
@@ -67,6 +75,9 @@ export const getMessageHistoryByConversationId = async (
     LEFT JOIN individual_employer ie_receiver ON receiver.user_id = ie_receiver.individual_employer_id
     LEFT JOIN business_employer be_receiver ON receiver.user_id = be_receiver.business_employer_id
     LEFT JOIN manpower_provider mp_receiver ON receiver.user_id = mp_receiver.manpower_provider_id
+
+    -- ✅ JOIN with hires table to get hire status
+    LEFT JOIN hires h ON h.message_id = m.message_id
 
     WHERE m.conversation_id = ?
     ORDER BY m.created_at ASC

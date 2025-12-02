@@ -70,7 +70,7 @@ export const hireApplicant = async (req: Request, res: Response): Promise<Respon
 
     // 2. Send message to employee with hire offer using handleMessageUpload
     // This will create a message with message_type = 'hire'
-    await handleMessageUpload(connection, {
+    await handleMessageUpload(connection, req, {
       sender_id: employer_id,
       receiver_id: employee_id,
       hire_message: hire_message,

@@ -81,7 +81,7 @@ export const contactAgency: RequestHandler = async (request: Request, res: Respo
       files: uploadedFiles!,
     };
 
-    const newMessage = (await handleMessageUpload(connection, params)) as RowDataPacket;
+    const newMessage = (await handleMessageUpload(connection, request, params)) as RowDataPacket;
 
     if (!newMessage?.conversation_id) {
       await connection.rollback();

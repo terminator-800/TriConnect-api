@@ -21,6 +21,7 @@ import { changeUserProfile } from '../middleware/upload-files.js';
 import { changeProfile } from '../controllers/userController/change-profile/change-profile.js';
 import { getNotified } from '../controllers/userController/notification/get-notified.js';
 import { markNotificationSeen } from '../controllers/userController/notification/seen-notification.js';
+import { acceptOffer } from '../controllers/userController/accept-decline-offer/accept-offer.js';
 
 const router = express.Router();
 
@@ -46,5 +47,6 @@ router.post('/jobseeker/feedback', authenticate, submitFeedback);
 router.patch('/jobseeker/change-profile', authenticate, changeUserProfile, changeProfile);
 router.get('/jobseeker/notification', authenticate, getNotified);
 router.patch('/jobseeker/notification/:notification_id/seen', authenticate, markNotificationSeen);
+router.patch('/jobseeker/accept-offer', authenticate, acceptOffer);
 
 export default router;

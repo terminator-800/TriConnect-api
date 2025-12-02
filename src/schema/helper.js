@@ -1,7 +1,7 @@
 // Users Schema
 export async function createUsersTable() {
   `
-    CREATE TABLE IF NOT EXISTS users (
+       CREATE TABLE IF NOT EXISTS users (
       user_id INT AUTO_INCREMENT PRIMARY KEY,
       role ENUM('jobseeker', 'business-employer', 'individual-employer', 'manpower-provider', 'administrator') NOT NULL,
       is_registered BOOLEAN DEFAULT FALSE,
@@ -15,16 +15,18 @@ export async function createUsersTable() {
       email VARCHAR(100) NOT NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
       profile VARCHAR(255), 
-
-      -- Token to manage single active session
       current_token VARCHAR(255) DEFAULT NULL,
-
-      -- Account status fields
       account_status ENUM('active', 'restricted', 'blocked', 'suspended', 'banned') DEFAULT 'active',
       status_reason TEXT,
       status_updated_at DATETIME DEFAULT NULL,
+      employment_status ENUM('available', 'hired', 'member') DEFAULT 'available',
+      employed_start_date DATE NULL,
+      employed_end_date DATE NULL,
+      employer_id INT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      FOREIGN KEY (employer_id) REFERENCES users(user_id) ON DELETE SET NULL
+
     );
   `;
 }
@@ -261,9 +263,16 @@ export async function createMessagesTable() {
       current_address VARCHAR(255) NULL,
       cover_letter TEXT NULL,
       message_text TEXT NULL,
+      hire_message TEXT NULL, 
       job_title VARCHAR(255) NULL,
       resume VARCHAR(255) NULL,
-      message_type ENUM('text', 'image', 'file', 'apply') DEFAULT 'text',
+      employer_name VARCHAR(255) NULL,
+      company_name VARCHAR(255) NULL,
+      project_location VARCHAR(255) NULL,
+      start_date DATE NULL,
+      end_date DATE NULL,
+      project_description TEXT NULL,
+      message_type ENUM('text', 'image', 'file', 'apply', 'request', 'hire') DEFAULT 'text',
       file_url VARCHAR(255) NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id) ON DELETE CASCADE,
@@ -324,53 +333,51 @@ export async function createReportsTable() {
 
 export async function createNotificationTable() {
   const query = `
-    CREATE TABLE IF NOT EXISTS notifications (
+     CREATE TABLE IF NOT EXISTS notifications (
         notification_id INT AUTO_INCREMENT PRIMARY KEY,
-
-        -- Who receives the notification
         user_id INT NOT NULL,
-
-        -- Who triggered the notification
         notifier_id  INT NULL,
-
-        -- Notification category
-        type ENUM(
-            'message',
-            'job_application',
-            'job_post_status',
-            'account_verification',
-            'report',
-            'system'
-        ) NOT NULL,
-
-        -- Title + content
+        type ENUM('message','job_application', 'job_post_status','account_verification','report','system','hire') NOT NULL,
         title VARCHAR(255) NOT NULL,
         message TEXT NOT NULL,
-
-        -- Optional reference to other tables
         reference_id INT NULL,
-        reference_type ENUM(
-            'conversation',
-            'message',
-            'job_post',
-            'job_application',
-            'report',
-            'user'
-        ) NULL,
-
-        -- Read status
+        reference_type ENUM('conversation','message','job_post','job_application','report','user') NULL,
         is_read BOOLEAN DEFAULT FALSE,
-
-        -- Timestamp
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-        -- Foreign key
         FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
         FOREIGN KEY (notifier_id) REFERENCES users(user_id) ON DELETE SET NULL,
-
-        -- Indexes for performance
         INDEX idx_user_id (user_id),
         INDEX idx_reference_id (reference_id)
         );
   `;
 }
+
+export async function createHiresTable() {
+  const query = `
+    CREATE TABLE IF NOT EXISTS hires (
+        hire_id INT AUTO_INCREMENT PRIMARY KEY,
+        employer_id INT NOT NULL,
+        employee_id INT NOT NULL,
+        job_title VARCHAR(255) NOT NULL,
+        start_date DATE NOT NULL,
+        end_date DATE NOT NULL,
+        status ENUM('pending', 'accepted', 'rejected', 'active', 'completed', 'terminated') DEFAULT 'pending',
+        message_id INT NULL,
+        conversation_id INT NULL,
+        rejection_reason TEXT NULL,
+        accepted_at DATETIME NULL,
+        rejected_at DATETIME NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        
+        FOREIGN KEY (employer_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (employee_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (message_id) REFERENCES messages(message_id) ON DELETE SET NULL,
+        FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id) ON DELETE SET NULL,
+        
+        INDEX idx_employer_id (employer_id),
+        INDEX idx_employee_id (employee_id),
+        INDEX idx_status (status)
+    );
+  `;
+}
+

@@ -63,6 +63,54 @@ function initializeSocket(server: any, userSocketMap: UserSocketMap) {
       if (!roomId) return socket.leave(roomId.toString());
     });
 
+       // NEW: Handle offer accepted event
+    socket.on('offer-accepted', async (data) => {
+      
+      try {
+        // Broadcast to everyone in the conversation room
+        io.to(`conversation-${data.conversation_id}`).emit('offer-status-updated', {
+          message_id: data.message_id,
+          hire_status: 'accepted',
+          conversation_id: data.conversation_id
+        });
+
+        // Also emit to general room (fallback)
+        io.to(data.conversation_id.toString()).emit('offer-status-updated', {
+          message_id: data.message_id,
+          hire_status: 'accepted',
+          conversation_id: data.conversation_id
+        });
+
+        console.log(`Emitted offer-status-updated for conversation ${data.conversation_id}`);
+      } catch (error) {
+        console.error('Error broadcasting offer acceptance:', error);
+      }
+    });
+
+    // NEW: Handle offer declined event
+    socket.on('offer-declined', async (data) => {
+      
+      try {
+        // Broadcast to everyone in the conversation room
+        io.to(`conversation-${data.conversation_id}`).emit('offer-status-updated', {
+          message_id: data.message_id,
+          hire_status: 'rejected',
+          conversation_id: data.conversation_id
+        });
+
+        // Also emit to general room (fallback)
+        io.to(data.conversation_id.toString()).emit('offer-status-updated', {
+          message_id: data.message_id,
+          hire_status: 'rejected',
+          conversation_id: data.conversation_id
+        });
+
+        console.log(`Emitted offer-status-updated for conversation ${data.conversation_id}`);
+      } catch (error) {
+        console.error('Error broadcasting offer decline:', error);
+      }
+    });
+
     socket.on('register', (user_id: number) => {
       if (userSocketMap[user_id] && userSocketMap[user_id] !== socket.id) {
       }

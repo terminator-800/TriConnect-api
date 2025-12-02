@@ -79,7 +79,7 @@ export const replyMessage = async (req: AuthenticatedRequest, res: Response) => 
     }
 
     // Upload the message
-    const rawMessage = await handleMessageUpload(connection, {
+    const rawMessage = await handleMessageUpload(connection, req, {
       sender_id,
       receiver_id,
       message: message_text,

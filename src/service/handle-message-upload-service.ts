@@ -112,7 +112,19 @@ export const handleMessageUpload = async (
     const io = req.app.get('io');
     const userSocketMap = req.app.get('userSocketMap');
     const socketId = userSocketMap[sender_id];
-
+   
+     console.log( conversation_id,
+         "SENDER ID: ", sender_id,
+          "RECEIVER ID:",receiver_id,
+          "EMPLOYER NAME:",employer_name,
+          "COMPANY NAME: ",company_name,
+          "PHONE NUMBER: ",phone_number,
+          "EMAIL ADDRESS: ",email_address,
+          "PROJECT LOCATION: ",project_location,
+          "DATE: ", formattedStartDate,
+          "PROJECT LOCATION: ",project_description,
+          "JOB TITLE",job_title,
+    );
    // FOR JOB APPLICATION 
     if (full_name && current_address && cover_letter && resume) {
       await connection.query(
@@ -162,6 +174,7 @@ export const handleMessageUpload = async (
     }
     // FOR HIRE REQUEST
     // NAA NANI NOTIF
+    
     else if (start_date && end_date && hire_message) {
       await connection.query(
         `INSERT INTO messages (
@@ -184,7 +197,7 @@ export const handleMessageUpload = async (
       );
     }
 
-    // FOR REQUEST MANPOWER
+    // FOR REQUEST BUSINESS EMPLOYER
     // NO NOTIF YET
     else if (employer_name && company_name && project_location && project_description) {
       await connection.query(
@@ -209,8 +222,32 @@ export const handleMessageUpload = async (
           'request',
         ]
       );
+    } 
+    // REQUEST FOR INDIVIDUAL EMPLOYER
+    // NO NOTIF YET
+      else if (employer_name && project_location && project_description) {
+      await connection.query(
+        `INSERT INTO messages (
+          conversation_id, sender_id, receiver_id,
+          employer_name, phone_number, email_address,
+          project_location, start_date, project_description, job_title,
+          message_type
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          conversation_id,
+          sender_id,
+          receiver_id,
+          employer_name ?? null,       
+          phone_number ?? null,        
+          email_address ?? null,       
+          project_location ?? null,    
+          formattedStartDate ?? null,  
+          project_description ?? null, 
+          job_title ?? null,           
+          'request',                   
+        ]
+      );
     }
-   
 
     // Insert optional text message
     if (message && message.trim() !== '') {
