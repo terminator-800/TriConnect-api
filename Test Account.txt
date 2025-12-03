@@ -6,12 +6,18 @@ password: 122899
 ==== JOBSEEKER =======
 email:	  jobseeker@gmail.com
 password: @Long09460645579
+
+email:	  alvincentsangco@gmail.com
+password: @Long09460645579
 =======================
 
 ==== EMPLOYER =======
 Business
 email:	  employerbesiness@gmail.com
 password: @Long09460645579
+email:	  alvincent.sangco@normi.edu.ph
+password: @Long09460645579
+
 Individual
 email:	  employerindividual@gmail.com
 password: @Long09460645579
@@ -19,5 +25,7 @@ password: @Long09460645579
 
 ==== MAN POWER =======
 email:	  manpower@gmail.com
+password: @Long09460645579
+email:	  liannefostaness11@gmail.com
 password: @Long09460645579
 ======================
