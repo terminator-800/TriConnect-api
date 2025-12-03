@@ -16,6 +16,7 @@ interface ApplicantRow extends RowDataPacket {
   job_title: string;
   applicant_name: string;
   location: string | null;
+  email: string;
 }
 
 interface ApplicantsResult {
@@ -32,6 +33,7 @@ interface ApplicantsResult {
     job_title: string;
     applicant_name: string;
     location: string;
+    email: string;
   }[];
 }
 
@@ -60,6 +62,7 @@ export async function getApplicantsByEmployer(
       ja.job_post_id,
       u.user_id AS applicant_user_id,
       u.role AS applicant_role,
+      u.email,
       jp.job_title,
       CASE 
         WHEN u.role = 'jobseeker' THEN js.full_name
@@ -125,6 +128,7 @@ export async function getApplicantsByEmployer(
         job_title: row.job_title,
         applicant_name: row.applicant_name,
         location: row.location || '-',
+        email: row.email,
         conversation_id: row.conversation_id,
       })),
     };
