@@ -42,6 +42,7 @@ export const apply = async (req: CustomRequest, res: Response) => {
     project_location,
     start_date,
     project_description,
+    express_message,
   } = req.body;
 
   const sender_id = req.user?.user_id;
@@ -123,6 +124,7 @@ export const apply = async (req: CustomRequest, res: Response) => {
       start_date,
       project_description,
       resume: uploadedFiles[0]!,
+      express_message,
     });
 
     if (!newMessage.conversation_id) {

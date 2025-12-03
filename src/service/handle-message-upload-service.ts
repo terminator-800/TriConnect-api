@@ -25,6 +25,7 @@ interface HandleMessageUploadParams {
   hire_message?: string;
   resume?: FileUpload;
   files?: FileUpload[];
+  express_message?: string;
 }
 
 export const handleMessageUpload = async (
@@ -52,6 +53,7 @@ export const handleMessageUpload = async (
       resume,
       files,
       hire_message,
+      express_message
     } = params;
     console.log(
       sender_id,
@@ -71,7 +73,8 @@ export const handleMessageUpload = async (
       project_description,
       resume,
       files,
-      hire_message
+      hire_message,
+      express_message
     );
 
       // Format start_date once at the beginning
@@ -245,6 +248,23 @@ export const handleMessageUpload = async (
           project_description ?? null, 
           job_title ?? null,           
           'request',                   
+        ]
+      );
+    } 
+    // FOR EXPRESS MESSAGE
+    // NO NOTIF YET
+    else if (express_message) {
+      await connection.query(
+        `INSERT INTO messages (
+          conversation_id, sender_id, receiver_id,
+          express_message, message_type
+        ) VALUES (?, ?, ?, ?, ?)`,
+        [
+          conversation_id,
+          sender_id,
+          receiver_id,
+          express_message,
+          'express',                   
         ]
       );
     }
