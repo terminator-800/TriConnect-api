@@ -70,7 +70,8 @@ export async function getJobseekerProfile(
             SELECT job_title 
             FROM hires 
             WHERE employee_id = u.user_id 
-            AND status = 'active'
+            AND status IN ('active', 'accepted')
+            ORDER BY created_at DESC
             LIMIT 1
           )
           ELSE NULL
@@ -103,7 +104,7 @@ export async function getJobseekerProfile(
       // Employment fields
       employment_status: row.employment_status || 'available',
       employer_id: row.employer_id || null,
-      contract_start_date: row.employed_start_date 
+      contract_start_date: row.employed_start_date
         ? format(new Date(row.employed_start_date), 'MMMM dd, yyyy')
         : null,
       contract_end_date: row.employed_end_date
