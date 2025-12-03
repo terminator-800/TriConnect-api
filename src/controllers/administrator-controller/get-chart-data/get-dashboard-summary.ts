@@ -70,15 +70,29 @@ export const getDashboardSummary = async (req: Request, res: Response): Promise<
       `,
       [year]
     );
+    /**
+     * // Note: Updated the 'hired' query to pull from 'hires' table and use 'accepted_at' timestamp
+     */
+    // const hired = await fetchMonthlyData(
+    //   `
+    //   SELECT MONTH(applied_at) AS month, COUNT(*) AS total
+    //   FROM job_applications
+    //   WHERE application_status = 'accepted'
+    //     AND YEAR(applied_at) = ?
+    //   GROUP BY MONTH(applied_at)
+    //   ORDER BY MONTH(applied_at);
+    //   `,
+    //   [year]
+    // );
 
     const hired = await fetchMonthlyData(
       `
-      SELECT MONTH(applied_at) AS month, COUNT(*) AS total
-      FROM job_applications
-      WHERE application_status = 'accepted' 
-        AND YEAR(applied_at) = ?
-      GROUP BY MONTH(applied_at)
-      ORDER BY MONTH(applied_at);
+      SELECT MONTH(accepted_at) AS month, COUNT(*) AS total
+      FROM hires
+      WHERE status = 'accepted' 
+        AND YEAR(accepted_at) = ?
+      GROUP BY MONTH(accepted_at)
+      ORDER BY MONTH(accepted_at);
       `,
       [year]
     );
