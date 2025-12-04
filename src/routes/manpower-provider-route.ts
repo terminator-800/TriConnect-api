@@ -31,6 +31,8 @@ import { createTeamJobPost } from '../controllers/userController/create-job-post
 import { hireApplicant } from '../controllers/userController/hire-reject-applicant/hire-applicant.js';
 import { manpowerProviderDashboard } from '../controllers/userController/manpower-provider-dashboard.js';
 // import { rejectApplicant } from '../controllers/userController/hire-reject-applicant/reject-applicant.js';
+import { acceptEmployerHandler } from '../controllers/userController/accept-reject-employer/accept-employer.js';
+import { declineEmployerHandler } from '../controllers/userController/accept-reject-employer/decline-employer.js';
 
 const router = express.Router();
 
@@ -73,5 +75,7 @@ router.post('/manpower-provider/team-job-post', authenticate, createTeamJobPost)
 router.post('/manpower-provider/hire-applicant', authenticate, hireApplicant);
 // router.get('/manpower-provider/provider-dashboard', authenticate, manpowerProviderDashboard);
 // router.patch('/manpower-provider/job-application/:application_id/reject', authenticate, rejectApplicant);
+router.post('/manpower-provider/accept-employer', authenticate, acceptEmployerHandler);
+router.post('/manpower-provider/decline-employer', authenticate, declineEmployerHandler);
 
 export default router;
