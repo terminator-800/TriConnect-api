@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import type { PoolConnection, ResultSetHeader } from 'mysql2/promise';
 import pool from '../../../config/database-connection.js';
 import { handleMessageUpload } from '../../../service/handle-message-upload-service.js';
-import { notifyUser } from '../../userController/notification/notify-user.js';
+import { notifyUser } from '../notification/notify-user.js';
 
 interface HireApplicantRequest {
   employee_id: number;
