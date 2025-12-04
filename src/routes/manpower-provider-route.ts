@@ -47,7 +47,7 @@ router.post('/manpower-provider/messages/send', authenticate, chatImageUpload, r
 router.get('/manpower-provider/conversations', authenticate, conversations);
 router.get('/manpower-provider/message-history/:conversation_id', authenticate, messageHistory);
 router.patch('/manpower-provider/mark-as-seen', authenticate, markAsSeen);
-router.patch('/manpower-provider/:jobPostId/:status', authenticate, updateJobPostStatus);
+router.patch('/manpower-provider/:jobPostId/:status/:postType', authenticate, updateJobPostStatus);
 router.delete('/manpower-provider/delete/jobpost/:jobPostId', authenticate, softDeleteJobPost);
 router.post('/manpower-provider/report-user', authenticate, reportUpload, reportUser);
 router.get('/manpower-provider/reported-users', authenticate, reportedUsers);

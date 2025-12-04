@@ -30,6 +30,13 @@ export interface JobPostRow extends RowDataPacket {
   applicant_count: number;
   required_skill: string | null;
   category: JobCategory | null;
+  // Hiring Post specific fields
+  job_type: string | null;
+  // Individual Post specific fields
+  worker_category: string | null;
+  years_of_experience: number | null;
+  // Team Post specific fields
+  number_of_workers: number | null;
 }
 
 export interface GroupedJobPosts {
@@ -83,7 +90,11 @@ export async function getJobPostsByUserGrouped(
             ELSE NULL
           END AS authorized_person,
           jp.required_skill,
-          COUNT(CASE WHEN ja.application_status != 'rejected' THEN 1 END) AS applicant_count
+          COUNT(CASE WHEN ja.application_status != 'rejected' THEN 1 END) AS applicant_count,
+          jp.job_type,
+          NULL AS worker_category,
+          NULL AS years_of_experience,
+          NULL AS number_of_workers
         FROM job_post jp
         JOIN users u ON jp.user_id = u.user_id
         LEFT JOIN business_employer be ON u.user_id = be.business_employer_id
@@ -110,7 +121,11 @@ export async function getJobPostsByUserGrouped(
           NULL AS employer_name,
           NULL AS authorized_person,
           ijp.skill AS required_skill,
-          COUNT(CASE WHEN ja.application_status != 'rejected' THEN 1 END) AS applicant_count
+          COUNT(CASE WHEN ja.application_status != 'rejected' THEN 1 END) AS applicant_count,
+          NULL AS job_type,
+          ijp.worker_category,
+          ijp.years_of_experience,
+          NULL AS number_of_workers
         FROM individual_job_post ijp
         JOIN users u ON ijp.user_id = u.user_id
         LEFT JOIN job_applications ja ON ijp.individual_job_post_id = ja.job_post_id
@@ -134,7 +149,11 @@ export async function getJobPostsByUserGrouped(
           NULL AS employer_name,
           NULL AS authorized_person,
           tjp.team_skills AS required_skill,
-          COUNT(CASE WHEN ja.application_status != 'rejected' THEN 1 END) AS applicant_count
+          COUNT(CASE WHEN ja.application_status != 'rejected' THEN 1 END) AS applicant_count,
+          NULL AS job_type,
+          tjp.worker_category,
+          NULL AS years_of_experience,
+          tjp.number_of_workers
         FROM team_job_post tjp
         JOIN users u ON tjp.user_id = u.user_id
         LEFT JOIN job_applications ja ON tjp.team_job_post_id = ja.job_post_id

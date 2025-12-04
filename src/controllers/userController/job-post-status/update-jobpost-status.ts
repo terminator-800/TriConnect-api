@@ -12,6 +12,7 @@ import pool from '../../../config/database-connection.js';
 interface UpdateJobPostStatusParams {
   jobPostId?: string; // comes from req.params
   status?: string;
+  postType?: 'job_post' | 'individual_job_post' | 'team_job_post';
 }
 
 // Allowed roles
@@ -26,13 +27,13 @@ export const updateJobPostStatus = async (
   res: Response
 ) => {
   let connection: PoolConnection | undefined;
-  const { jobPostId, status } = req.params;
+  const { jobPostId, status, postType } = req.params;
   const role = (req.user as AuthenticatedUser)?.role;
   const user_id = (req.user as AuthenticatedUser)?.user_id;
   const ip = req.ip;
 
-  if (!jobPostId || !status) {
-    return res.status(400).json({ error: 'Missing jobPostId or status' });
+  if (!jobPostId || !status || !postType) {
+    return res.status(400).json({ error: 'Missing jobPostId, status, or postType' });
   }
 
   const allowedStatuses = ['paused', 'active', 'completed'];
@@ -65,7 +66,7 @@ export const updateJobPostStatus = async (
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
-    const affected = await updateStatus(connection, normalizedStatus, jobPostIdNum);
+    const affected = await updateStatus(connection, normalizedStatus, jobPostIdNum, postType);
 
     if (affected === 0) {
       await connection.rollback();
