@@ -47,7 +47,7 @@ router.get('/individual-employer/conversations', authenticate, conversations);
 router.get('/individual-employer/message-history/:conversation_id', authenticate, messageHistory);
 router.post('/individual-employer/messages/send', authenticate, chatImageUpload, replyMessage);
 router.patch('/individual-employer/mark-as-seen', authenticate, markAsSeen);
-router.patch('/individual-employer/:jobPostId/:status', authenticate, updateJobPostStatus);
+router.patch('/individual-employer/:jobPostId/:status/:postType', authenticate, updateJobPostStatus);
 router.delete('/individual-employer/delete/jobpost/:jobPostId', authenticate, softDeleteJobPost);
 router.post('/individual-employer/message-agency', authenticate, chatImageUpload, contactAgency);
 router.get('/individual-employer/uncontacted-agencies', authenticate, uncontactedAgencies);
