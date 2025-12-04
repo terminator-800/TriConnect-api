@@ -57,13 +57,19 @@ export const rejectApplication = async (
 
     connection = await pool.getConnection();
 
-    // Fetch applicant details and job title first
+    // Fetch applicant details and job title from all three possible job post types
     const [rows] = await connection.query<RowDataPacket[]>(
       `
-      SELECT ja.user_id AS applicant_id, jp.job_title
+      SELECT 
+        ja.applicant_id,
+        COALESCE(jp.job_title, ijp.worker_name, tjp.worker_category) AS job_title,
+        COALESCE(jp.user_id, ijp.user_id, tjp.user_id) AS employer_id
       FROM job_applications ja
-      JOIN job_post jp ON jp.job_post_id = ja.job_post_id
-      WHERE ja.application_id = ? AND jp.user_id = ?
+      LEFT JOIN job_post jp ON jp.job_post_id = ja.job_post_id
+      LEFT JOIN individual_job_post ijp ON ijp.individual_job_post_id = ja.individual_job_post_id
+      LEFT JOIN team_job_post tjp ON tjp.team_job_post_id = ja.team_job_post_id
+      WHERE ja.application_id = ?
+      AND COALESCE(jp.user_id, ijp.user_id, tjp.user_id) = ?
       `,
       [applicationId, employerUserId]
     );
@@ -79,12 +85,16 @@ export const rejectApplication = async (
 
     const { applicant_id, job_title } = rows[0] as { applicant_id: number; job_title: string };
 
+    // Update the application status to rejected
     const [result] = await connection.query<ResultSetHeader>(
       `
       UPDATE job_applications ja
-      JOIN job_post jp ON jp.job_post_id = ja.job_post_id
+      LEFT JOIN job_post jp ON jp.job_post_id = ja.job_post_id
+      LEFT JOIN individual_job_post ijp ON ijp.individual_job_post_id = ja.individual_job_post_id
+      LEFT JOIN team_job_post tjp ON tjp.team_job_post_id = ja.team_job_post_id
       SET ja.application_status = 'rejected'
-      WHERE ja.application_id = ? AND jp.user_id = ?
+      WHERE ja.application_id = ?
+      AND COALESCE(jp.user_id, ijp.user_id, tjp.user_id) = ?
       `,
       [applicationId, employerUserId]
     );
