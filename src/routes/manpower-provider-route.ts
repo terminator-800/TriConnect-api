@@ -29,6 +29,7 @@ import { markNotificationSeen } from '../controllers/userController/notification
 import { createIndividualJobPost } from '../controllers/userController/create-job-post/create-individual-job-post.js';
 import { createTeamJobPost } from '../controllers/userController/create-job-post/create-team-job-post.js';
 import { hireApplicant } from '../controllers/userController/hire-reject-applicant/hire-applicant.js';
+import { manpowerProviderDashboard } from '../controllers/userController/manpower-provider-dashboard.js';
 // import { rejectApplicant } from '../controllers/userController/hire-reject-applicant/reject-applicant.js';
 
 const router = express.Router();
@@ -53,7 +54,7 @@ router.post('/manpower-provider/report-user', authenticate, reportUpload, report
 router.get('/manpower-provider/reported-users', authenticate, reportedUsers);
 router.post('/manpower-provider/feedback', authenticate, submitFeedback);
 router.get('/manpower-provider/applicants', authenticate, viewApplicants);
-router.get('/manpower-provider/dashboard', authenticate, employerDashboard);
+router.get('/manpower-provider/dashboard', authenticate, manpowerProviderDashboard);
 router.patch(
   '/manpower-provider/applications/:applicationId/reject',
   authenticate,
@@ -70,6 +71,7 @@ router.patch(
 router.post('/manpower-provider/individual-job-post', authenticate, createIndividualJobPost);
 router.post('/manpower-provider/team-job-post', authenticate, createTeamJobPost);
 router.post('/manpower-provider/hire-applicant', authenticate, hireApplicant);
+// router.get('/manpower-provider/provider-dashboard', authenticate, manpowerProviderDashboard);
 // router.patch('/manpower-provider/job-application/:application_id/reject', authenticate, rejectApplicant);
 
 export default router;
