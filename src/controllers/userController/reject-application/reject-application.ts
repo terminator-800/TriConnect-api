@@ -1,9 +1,10 @@
-import type { PoolConnection, ResultSetHeader } from 'mysql2/promise';
+import type { PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import type { Request, Response } from 'express';
 import type { AuthenticatedUser } from '../../../types/express/auth.js';
 import logger from '../../../config/logger.js';
 import pool from '../../../config/database-connection.js';
 import { ROLE } from '../../../utils/roles.js';
+import { notifyUser } from '../notification/notify-user.js';
 
 // Make params optional
 interface RejectApplicationParams {
@@ -56,6 +57,28 @@ export const rejectApplication = async (
 
     connection = await pool.getConnection();
 
+    // Fetch applicant details and job title first
+    const [rows] = await connection.query<RowDataPacket[]>(
+      `
+      SELECT ja.user_id AS applicant_id, jp.job_title
+      FROM job_applications ja
+      JOIN job_post jp ON jp.job_post_id = ja.job_post_id
+      WHERE ja.application_id = ? AND jp.user_id = ?
+      `,
+      [applicationId, employerUserId]
+    );
+
+    if (rows.length === 0) {
+      logger.warn('Application not found or not owned by employer', {
+        employerUserId,
+        applicationId,
+        ip,
+      });
+      return res.status(404).json({ message: 'Application not found or not owned by employer' });
+    }
+
+    const { applicant_id, job_title } = rows[0] as { applicant_id: number; job_title: string };
+
     const [result] = await connection.query<ResultSetHeader>(
       `
       UPDATE job_applications ja
@@ -67,13 +90,17 @@ export const rejectApplication = async (
     );
 
     if (result.affectedRows === 0) {
-      logger.warn('Application not found or not owned by employer', {
-        employerUserId,
-        applicationId,
-        ip,
-      });
       return res.status(404).json({ message: 'Application not found or not owned by employer' });
     }
+
+    // Notify the applicant about the rejection
+    await notifyUser(
+      applicant_id,
+      'APPLICATION REJECTED',
+      `Your application for ${job_title} has been rejected.`,
+      'job_application',
+      employerUserId
+    );
 
     return res.status(200).json({ message: 'Application rejected successfully' });
   } catch (error: any) {
