@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 import pool from '../../config/database-connection.js';
 import jwt from 'jsonwebtoken';
 import logger from '../../config/logger.js';
+import { refreshEmploymentStatus } from '../../utils/refresh-employment-status.js';
 
 interface UserRow extends RowDataPacket {
   user_id: number;
@@ -40,6 +41,9 @@ export const login = async (request: CustomRequest, response: Response) => {
       logger.warn('Login failed: password mismatch', { email, user_id: user.user_id });
       return response.status(401).json({ message: 'Invalid email or password' });
     }
+
+    // FOR HIRED RESETTING EMPLOYMENT STATUS
+    await refreshEmploymentStatus(user.user_id);
 
     // Create JWT token
     const token = jwt.sign(
