@@ -17,6 +17,8 @@ import { authenticate } from '../middleware/authenticate.js';
 import { getDashboardSummary } from '../controllers/administrator-controller/get-chart-data/get-dashboard-summary.js';
 import { getNotified } from '../controllers/userController/notification/get-notified.js';
 import { markNotificationSeen } from '../controllers/userController/notification/seen-notification.js';
+import { getSuccessfulHires } from '../controllers/administrator-controller/get-successful-hires/get-successful-hires.js';
+import { getEnrolledEmployers } from '../controllers/administrator-controller/get-enrolled-employers.js';
 
 const router = express.Router();
 
@@ -41,5 +43,6 @@ router.patch(
   authenticate,
   markNotificationSeen
 );
-
+router.get('/administrator/successful-hires', authenticate, getSuccessfulHires);
+router.get('/administrator/enrolled-employers', authenticate, getEnrolledEmployers);
 export default router;
