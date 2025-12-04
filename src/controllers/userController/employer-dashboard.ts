@@ -16,6 +16,13 @@ interface JobPostRow extends RowDataPacket {
   applicant_count: number;
 }
 
+interface DashboardStatsRow extends RowDataPacket {
+  total_applicants: number;
+  applied_count: number;
+  hired_count: number;
+  rejected_count: number;
+}
+
 // Request type with authenticated user
 type EmployerDashboardRequest = Request & {
   user?: AuthenticatedUser;
@@ -47,21 +54,21 @@ export const employerDashboard = async (
     // Recent job posts (top 3 by created_at) with applicant count (excluding rejected)
     const [recentPostsRows] = await connection.query<JobPostRow[]>(
       `
-      SELECT 
-        jp.job_post_id,
-        jp.job_title,
-        jp.job_type,
-        jp.created_at,
-        jp.jobpost_status,
-        COUNT(CASE WHEN ja.application_status != 'rejected' THEN 1 END) AS applicant_count
-      FROM job_post jp
-      LEFT JOIN job_applications ja ON ja.job_post_id = jp.job_post_id
-      WHERE jp.user_id = ?
-        AND (jp.jobpost_status != 'deleted' OR jp.jobpost_status IS NULL)
-      GROUP BY jp.job_post_id
-      ORDER BY jp.created_at DESC
-      LIMIT 3
-      `,
+        SELECT 
+          jp.job_post_id,
+          jp.job_title,
+          jp.job_type,
+          jp.created_at,
+          jp.jobpost_status,
+          COUNT(CASE WHEN ja.application_status != 'rejected' THEN 1 END) AS applicant_count
+        FROM job_post jp
+        LEFT JOIN job_applications ja ON ja.job_post_id = jp.job_post_id
+        WHERE jp.user_id = ?
+          AND (jp.jobpost_status != 'deleted' OR jp.jobpost_status IS NULL)
+        GROUP BY jp.job_post_id
+        ORDER BY jp.created_at DESC
+        LIMIT 3
+        `,
       [employerUserId]
     );
 
@@ -80,7 +87,29 @@ export const employerDashboard = async (
       pageSize: 5,
     });
 
-    return res.status(200).json({ recentJobPosts, recentApplicants: applicants });
+    // Dashboard Stats
+    const [statsRows] = await connection.query<DashboardStatsRow[]>(
+      `
+        SELECT 
+          COUNT(*) AS total_applicants,
+          COUNT(CASE WHEN ja.application_status = 'pending' THEN 1 END) AS applied_count,
+          COUNT(CASE WHEN ja.application_status = 'accepted' THEN 1 END) AS hired_count,
+          COUNT(CASE WHEN ja.application_status = 'rejected' THEN 1 END) AS rejected_count
+        FROM job_applications ja
+        JOIN job_post jp ON ja.job_post_id = jp.job_post_id
+        WHERE jp.user_id = ?
+        `,
+      [employerUserId]
+    );
+
+    const stats = {
+      totalApplicants: Number(statsRows[0]?.total_applicants || 0),
+      applied: Number(statsRows[0]?.applied_count || 0),
+      hired: Number(statsRows[0]?.hired_count || 0),
+      rejected: Number(statsRows[0]?.rejected_count || 0),
+    };
+
+    return res.status(200).json({ recentJobPosts, recentApplicants: applicants, stats });
   } catch (error: any) {
     logger.error('Failed to load employer dashboard', {
       ip,
