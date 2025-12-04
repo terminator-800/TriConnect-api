@@ -5,6 +5,7 @@ import { ROLE } from '../../../utils/roles.js';
 import logger from '../../../config/logger.js';
 import pool from '../../../config/database-connection.js';
 import { countActiveJobPostsAllTables } from './create-job-post-helper.js';
+import { notifyUser } from '../notification/notify-user.js';
 
 // Request body type
 interface CreateTeamJobPostBody {
@@ -100,6 +101,15 @@ export const createTeamJobPost = async (
 
     // Insert into DB
     const team_job_post_id = await insertTeamJobPost(connection, input);
+
+    //Push notification for new job post could be added here
+    // This notify to admin
+    const userId = 1; // user id for recipient of the notification and this is ADMIN account
+    const title = 'NEW JOB POST CREATED';
+    const message = `A new job post has been submitted  and is pending for verification. Please review the job details and approve or reject it`;
+    const type = 'job_post_status';
+
+    await notifyUser(userId, title, message, type);
 
     const responseData: SuccessResult = {
       success: true,
