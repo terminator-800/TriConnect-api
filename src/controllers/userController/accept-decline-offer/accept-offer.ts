@@ -1,6 +1,9 @@
 import type { Request, Response } from 'express';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2';
 import pool from '../../../config/database-connection.js';
+import sendMail from '../../../service/email-handler.js';
+import { applicationAcceptedTemplate } from './accept-email.js';
+import { ROLE } from '../../../utils/roles.js';
 
 // Types
 interface AcceptOfferRequest {
@@ -30,7 +33,21 @@ export const acceptOffer = async (req: Request, res: Response) => {
       conversation_id
     }: AcceptOfferRequest = req.body;
 
+    // Build the email HTML
+    const emailHtml = applicationAcceptedTemplate({
+      name: full_name,
+      position: job_title,
+      company: employer_name,
+      date: new Date(start_date).toLocaleDateString(),
+      jobDetailsUrl: `${process.env.CLIENT_ORIGIN}/${ROLE.JOBSEEKER}/message` 
+    });
+
     const userId = req.user?.user_id; 
+
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
     if (!userId) {
         await connection.rollback();
         return res.status(401).json({ success: false, message: 'Unauthorized' });
@@ -185,6 +202,12 @@ export const acceptOffer = async (req: Request, res: Response) => {
         ]
       );
     }
+
+      await sendMail(
+      req.user.email,
+      "Your Job Application Has Been Accepted",
+      emailHtml
+    );
 
     await connection.commit();
 

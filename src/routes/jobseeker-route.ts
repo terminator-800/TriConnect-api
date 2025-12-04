@@ -22,6 +22,7 @@ import { changeProfile } from '../controllers/userController/change-profile/chan
 import { getNotified } from '../controllers/userController/notification/get-notified.js';
 import { markNotificationSeen } from '../controllers/userController/notification/seen-notification.js';
 import { acceptOffer } from '../controllers/userController/accept-decline-offer/accept-offer.js';
+import { declineOffer } from '../controllers/userController/accept-decline-offer/decline-offer.js';
 
 const router = express.Router();
 
@@ -48,5 +49,7 @@ router.patch('/jobseeker/change-profile', authenticate, changeUserProfile, chang
 router.get('/jobseeker/notification', authenticate, getNotified);
 router.patch('/jobseeker/notification/:notification_id/seen', authenticate, markNotificationSeen);
 router.patch('/jobseeker/accept-offer', authenticate, acceptOffer);
+router.patch('/jobseeker/decline-offer', authenticate, declineOffer);
+
 
 export default router;
