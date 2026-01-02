@@ -18,7 +18,12 @@ interface UserRow extends RowDataPacket {
 
 export const login = async (request: CustomRequest, response: Response) => {
   let connection: PoolConnection | undefined;
-  const { email, password } = request.body as { email: string; password: string };
+
+  const { email, password, rememberMe } = request.body as {
+    email: string;
+    password: string;
+    rememberMe?: boolean;
+  };
 
   try {
     connection = await pool.getConnection();
@@ -54,17 +59,19 @@ export const login = async (request: CustomRequest, response: Response) => {
         is_registered: user.is_registered,
       } as AuthenticatedUser,
       process.env.JWT_SECRET as string,
-      { expiresIn: '1d' }
+      { expiresIn: rememberMe ? '7d' : '1h' }
     );
 
     const isProduction = process.env.NODE_ENV === 'production';
 
     // Set cookie
     response.cookie('token', token, {
-      httpOnly: true,
-      secure: isProduction, // only true in prod
-      sameSite: isProduction ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    maxAge: rememberMe
+      ? 7 * 24 * 60 * 60 * 1000 // 7 days
+      : undefined,             // session cookie
     });
 
     logger.info(
@@ -74,7 +81,6 @@ export const login = async (request: CustomRequest, response: Response) => {
       message: 'Login successful',
       role: user.role,
       user_id: user.user_id,
-      token,
     });
   } catch (error) {
     logger.error('Login error:', { error, email: request.body.email, ip: request.ip });
