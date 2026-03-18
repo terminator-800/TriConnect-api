@@ -16,14 +16,7 @@ export async function findUsersEmail(
 
     return rows.length > 0 && rows[0] ? rows[0] : null;
   } catch (error: any) {
-    if (error.code === 'ECONNREFUSED') {
-      logger.error('Database connection refused', { error });
-    } else if (error.code && error.code.startsWith('ER_')) {
-      logger.error('Database query failed', { email, error });
-    } else {
-      logger.error('Unexpected error in findUsersEmail', { email, error });
-    }
-
+    logger.error('Error finding user by email', { email, error });
     throw error;
   }
 }
