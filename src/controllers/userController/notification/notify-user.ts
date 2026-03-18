@@ -26,6 +26,7 @@ export async function notifyUser(
     );
   } catch (error: any) {
     logger.error('Failed to create notification', { user_id, notifier_id, error });
+    console.log('Failed to create notification', { user_id, notifier_id, error });
   } finally {
     if (connection) connection.release();
   }

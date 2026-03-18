@@ -4,7 +4,8 @@ import { createJobPosts } from '../../userController/create-job-post/create-job-
 import { ROLE } from '../../../utils/roles.js';
 import logger from '../../../config/logger.js';
 import pool from '../../../config/database-connection.js';
-import { notifyUser } from '../notification/notify-user.js';
+import { notificationService } from '../../../service/notification.service.js';
+import { userRepository } from '../../../repositories/user.repositories.js';
 
 // Request body type
 interface CreateJobPostBody {
@@ -14,6 +15,7 @@ interface CreateJobPostBody {
   location: string;
   required_skill: string;
   job_description: string;
+  number_of_worker: string; // Add this
 }
 
 // Authenticated user type
@@ -51,7 +53,7 @@ export const createJobPost = async (
   const { user } = request as Request & { user: AuthenticatedUser };
   const ip = request.ip;
   let connection: PoolConnection | undefined;
-
+  
   try {
     connection = await pool.getConnection();
 
@@ -64,8 +66,7 @@ export const createJobPost = async (
         .json({ error: 'Forbidden: Only authorized employers can create job posts.' });
     }
 
-    const { job_title, job_type, salary_range, location, required_skill, job_description } =
-      request.body;
+    const { job_title, job_type, salary_range, location, required_skill, job_description, number_of_worker } = request.body;
 
     const typedJobType = job_type as 'Full-time' | 'Part-time' | 'Contract';
 
@@ -77,16 +78,21 @@ export const createJobPost = async (
       location,
       required_skill,
       job_description,
+      number_of_worker,
     });
 
-    const userId = 1; // user id for recipient of the notification and this is ADMIN account
-    const title = 'NEW JOB POST CREATED';
-    const message = `A new job post has been submitted  and is pending for verification. Please review the job details and approve or reject it`;
-    const type = 'job_post_status';
+    const notifierName = await userRepository.getDisplayName(connection, user_id);
+    connection.release();
+    connection = undefined;
+    
+    await notificationService.notifyAdminOfJobPost(user_id, notifierName).catch((error) => {
+      logger.error('Failed to send notification', { error, user_id, ip });
+      console.log(`Failed to send notification for new job post by user ID ${user_id}:`, error);
+    });
 
-    await notifyUser(userId, title, message, type);
-
+   // Check if job post creation failed
     if ('error' in result) {
+      console.log('Job post creation failed with result:', result); 
       logger.warn('Validation or service error returned from createJobPosts', {
         result,
         user_id,
@@ -109,8 +115,12 @@ export const createJobPost = async (
       cause: error?.cause || 'No cause',
       ip,
     });
-    return response.status(500).json({ error: 'Internal server error.' });
+    console.log("Error at create-job-post.ts",error)
+    return response.status(500).json({ 
+      error: 'Internal server error.',
+    });
   } finally {
     if (connection) connection.release();
   }
 };
+

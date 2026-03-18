@@ -219,6 +219,78 @@ const changeUserProfile = multer({
   },
 }).single('profile');
 
+
+
+
+
+
+// RESUME UPLOAD MULTER SECTION
+// === File Filter === 
+export const resumeFileFilter = (
+  req: Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  // Allowed MIME types: PDF + images
+  const allowedMimeTypes = [
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+  ];
+
+  // Some Windows PDFs might come as 'application/octet-stream'
+  if (
+    file.mimetype === 'application/octet-stream' &&
+    file.originalname.toLowerCase().endsWith('.pdf')
+  ) {
+    return cb(null, true);
+  }
+
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return cb(
+      new Error('Only PDF or image files (PNG/JPG/JPEG) are allowed for resumes.')
+    );
+  }
+
+  cb(null, true);
+};
+
+// === Storage ===
+const resumeStorage = multer.diskStorage({
+  destination: (req: Request, _file, cb) => {
+    try {
+      const token = req.cookies?.token;
+      if (!token) return cb(new Error('Unauthorized: No token provided'), '');
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthenticatedUser;
+      const userId = decoded.user_id;
+
+      // Path: uploads/jobseeker/<userId>/resume
+      const folderPath = path.join('./uploads', ROLE.JOBSEEKER, String(userId), 'resume');
+      fs.mkdirSync(folderPath, { recursive: true });
+
+      cb(null, folderPath);
+    } catch (err) {
+      cb(new Error('Invalid or expired token'), undefined as unknown as string);
+    }
+  },
+  filename: (_req, file, cb) => {
+    const uniqueName = `resume_${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
+});
+
+// === Middleware ===
+const uploadResume = multer({
+  storage: resumeStorage,
+  fileFilter: resumeFileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max
+  },
+}).single('resume'); // single file, field name "resume"
+
+
 // === Exported Uploads ===
 export {
   uploadJobseekerFiles,
@@ -228,4 +300,5 @@ export {
   chatImageUpload,
   reportUpload,
   changeUserProfile,
+  uploadResume
 };

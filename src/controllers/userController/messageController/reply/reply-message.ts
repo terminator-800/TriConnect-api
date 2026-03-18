@@ -43,6 +43,8 @@ interface NameRow extends RowDataPacket {
 export const replyMessage = async (req: AuthenticatedRequest, res: Response) => {
   let connection: PoolConnection | undefined;
   const { receiver_id, message_text } = req.body;
+  console.log("RECEIVER ID: ", receiver_id, " MESSAGE TEXT: ", message_text);
+  
   const sender_id = req.user?.user_id;
   const ip = req.ip;
 

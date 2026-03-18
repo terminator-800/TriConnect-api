@@ -1,7 +1,7 @@
 import express from 'express';
 import { registerUser } from '../controllers/userController/register/register-user-account.js';
 import { verifyEmail } from '../controllers/userController/email-verification/email-verification.js';
-import { uploadRequirement } from '../controllers/userController/upload-requirement/upload-user-requirement.js';
+import { uploadRequirement } from '../controllers/userController/upload-requirement/upload.requirement.controller.js';
 import { getUserProfile } from '../controllers/userController/user-profile/user-profile.js';
 import { createJobPost } from '../controllers/userController/create-job-post/create-job-post.js';
 import { conversations } from '../controllers/userController/messageController/conversation/conversations.js';
@@ -36,17 +36,14 @@ const router = express.Router();
 router.post('/register/individual-employer', validateRegisterInput, registerUser);
 router.get('/individual-employer/verify', verifyEmail);
 router.get('/individual-employer/profile', authenticate, getUserProfile);
-router.post(
-  '/individual-employer/upload-requirements',
-  authenticate,
-  uploadIndividualEmployerFiles,
-  uploadRequirement
-);
+router.post('/individual-employer/upload-requirements', authenticate, uploadIndividualEmployerFiles, uploadRequirement);
 router.post('/individual-employer/job-post', authenticate, createJobPost);
 router.get('/individual-employer/conversations', authenticate, conversations);
 router.get('/individual-employer/message-history/:conversation_id', authenticate, messageHistory);
 router.post('/individual-employer/messages/send', authenticate, chatImageUpload, replyMessage);
 router.patch('/individual-employer/mark-as-seen', authenticate, markAsSeen);
+router.patch('/individual-employer/applications/:application_id/reject', authenticate, rejectApplication);
+router.patch('/individual-employer/notification/:notification_id/seen', authenticate, markNotificationSeen);
 router.patch('/individual-employer/:jobPostId/:status/:postType', authenticate, updateJobPostStatus);
 router.delete('/individual-employer/delete/jobpost/:jobPostId', authenticate, softDeleteJobPost);
 router.post('/individual-employer/message-agency', authenticate, chatImageUpload, contactAgency);
@@ -56,19 +53,9 @@ router.get('/individual-employer/reported-users', authenticate, reportedUsers);
 router.post('/individual-employer/feedback', authenticate, submitFeedback);
 router.get('/individual-employer/applicants', authenticate, viewApplicants);
 router.get('/individual-employer/dashboard', authenticate, employerDashboard);
-router.patch(
-  '/individual-employer/applications/:applicationId/reject',
-  authenticate,
-  rejectApplication
-);
 router.patch('/individual-employer/change-profile', authenticate, changeUserProfile, changeProfile);
 router.put('/individual-employer/edit-job-post/:job_post_id', authenticate, editJobPost);
 router.get('/individual-employer/notification', authenticate, getNotified);
-router.patch(
-  '/individual-employer/notification/:notification_id/seen',
-  authenticate,
-  markNotificationSeen
-);
 router.post('/individual-employer/requests', authenticate, apply);
 router.post('/individual-employer/hire-applicant', authenticate, hireApplicant);
 // router.patch('/individual-employer/job-application/:application_id/reject', authenticate, rejectApplicant);

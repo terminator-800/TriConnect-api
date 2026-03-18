@@ -15,6 +15,7 @@ export interface JobPostData {
   location: string;
   required_skill: string;
   job_description: string;
+  number_of_worker: string; 
 }
 
 interface SuccessResult {

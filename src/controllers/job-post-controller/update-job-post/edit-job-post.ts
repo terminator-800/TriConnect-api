@@ -29,6 +29,7 @@ export const editJobPost = async (req: CustomRequest, res: Response): Promise<vo
     location,
     salary_range,
     job_type,
+    number_of_workers,
   } = req.body;
 
   if (!job_post_id) {
@@ -41,9 +42,44 @@ export const editJobPost = async (req: CustomRequest, res: Response): Promise<vo
   try {
     connection = await pool.getConnection();
 
-    // Update query
-    const [result] = await connection.query(
-      `UPDATE job_post
+    // Check if user role should update number_of_workers
+    const shouldUpdateNumberOfWorkers = 
+      user_role === ROLE.BUSINESS_EMPLOYER || user_role === ROLE.MANPOWER_PROVIDER;
+
+    // Build dynamic query based on role
+    let updateQuery: string;
+    let queryParams: any[];
+
+    if (shouldUpdateNumberOfWorkers) {
+      // Include number_of_workers in update for business employers and manpower providers
+      updateQuery = `UPDATE job_post
+        SET job_title = ?, 
+            job_description = ?, 
+            required_skill = ?, 
+            location = ?, 
+            salary_range = ?, 
+            job_type = ?, 
+            number_of_worker = ?,
+            jobpost_status = 'pending', 
+            is_verified_jobpost = 0, 
+            approved_at = NULL,
+            status = 'pending'
+        WHERE job_post_id = ? AND user_id = ?`;
+      
+      queryParams = [
+        job_title,
+        job_description,
+        required_skill,
+        location,
+        salary_range,
+        job_type,
+        number_of_workers || null,
+        job_post_id,
+        user_id,
+      ];
+    } else {
+      // Exclude number_of_workers for individual employers
+      updateQuery = `UPDATE job_post
         SET job_title = ?, 
             job_description = ?, 
             required_skill = ?, 
@@ -54,8 +90,9 @@ export const editJobPost = async (req: CustomRequest, res: Response): Promise<vo
             is_verified_jobpost = 0, 
             approved_at = NULL,
             status = 'pending'
-        WHERE job_post_id = ? AND user_id = ?`,
-      [
+        WHERE job_post_id = ? AND user_id = ?`;
+      
+      queryParams = [
         job_title,
         job_description,
         required_skill,
@@ -64,8 +101,11 @@ export const editJobPost = async (req: CustomRequest, res: Response): Promise<vo
         job_type,
         job_post_id,
         user_id,
-      ]
-    );
+      ];
+    }
+
+    // Execute the update query
+    const [result] = await connection.query(updateQuery, queryParams);
 
     res.status(200).json({ message: 'Job post updated successfully', result });
   } catch (error: any) {
@@ -75,6 +115,7 @@ export const editJobPost = async (req: CustomRequest, res: Response): Promise<vo
       stack: error?.stack || 'No stack trace',
       cause: error?.cause || 'No cause',
       user_id,
+      user_role,
       ip: req.ip,
       job_post_id,
     });

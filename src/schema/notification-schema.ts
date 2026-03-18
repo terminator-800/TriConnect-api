@@ -11,7 +11,7 @@ export async function createNotificationTable(connection: Pool | PoolConnection)
 
         -- Who triggered the notification
         notifier_id  INT NULL,
-
+        
         -- Notification category
         type ENUM(
             'message',

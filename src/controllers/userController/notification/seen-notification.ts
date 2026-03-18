@@ -6,6 +6,7 @@ import logger from '../../../config/logger.js';
 
 export const markNotificationSeen = async (req: CustomRequest, res: Response) => {
   let connection: PoolConnection | undefined;
+
   try {
     const user_id = req.user?.user_id;
     if (!user_id) {
@@ -42,6 +43,7 @@ export const markNotificationSeen = async (req: CustomRequest, res: Response) =>
       stack: error?.stack || 'No stack trace',
       error,
     });
+    console.log(`Error in markNotificationSeen controller:`, error.message);
     return res.status(500).json({ message: 'Failed to mark notification as seen.' });
   } finally {
     if (connection) connection.release();

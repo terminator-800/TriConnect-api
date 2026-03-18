@@ -10,15 +10,8 @@ export const uploadToCloudinary = async (
     logger.info(`File uploaded to Cloudinary: ${filePath}`, { folder, url: result.secure_url });
     return result.secure_url;
   } catch (error: any) {
-    logger.error('Failed to upload file to Cloudinary', {
-      filePath,
-      folder,
-      name: error?.name || 'UnknownError',
-      message: error?.message || 'Unknown error',
-      stack: error?.stack || 'No stack trace',
-      cause: error?.cause || 'No cause',
-      error,
-    });
-    throw new Error(`Failed to upload file to Cloudinary.`);
+     console.error('Cloudinary raw error:', error);
+  logger.error('Failed to upload file to Cloudinary', { error });
+  throw new Error(`Failed to upload file to Cloudinary: ${JSON.stringify(error)}`);
   }
 };

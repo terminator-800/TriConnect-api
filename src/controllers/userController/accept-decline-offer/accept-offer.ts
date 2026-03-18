@@ -33,41 +33,31 @@ export const acceptOffer = async (req: Request, res: Response) => {
       conversation_id
     }: AcceptOfferRequest = req.body;
 
-    // Build the email HTML
-    const emailHtml = applicationAcceptedTemplate({
-      name: full_name,
-      position: job_title,
-      company: employer_name,
-      date: new Date(start_date).toLocaleDateString(),
-      jobDetailsUrl: `${process.env.CLIENT_ORIGIN}/${ROLE.JOBSEEKER}/message` 
-    });
-
     const userId = req.user?.user_id; 
 
+    // ✅ Check authorization BEFORE any transaction or email building
     if (!req.user) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     if (!userId) {
-        await connection.rollback();
-        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 
     const userRole = req.user?.role;
     console.log(req.body, "REQ BODY");
 
     const formatMySQLDate = (value: string | Date) => {
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return null;
-    return d.toISOString().slice(0, 19).replace('T', ' ');
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return null;
+      return d.toISOString().slice(0, 19).replace('T', ' ');
     };
-
 
     const mysqlStartDate = formatMySQLDate(start_date);
     const mysqlEndDate = formatMySQLDate(end_date);
     const mysqlAcceptedAt = accepted_at 
-    ? formatMySQLDate(accepted_at) 
-    : formatMySQLDate(new Date().toISOString());
+      ? formatMySQLDate(accepted_at) 
+      : formatMySQLDate(new Date().toISOString());
 
     // Validate required fields
     if (!job_title || !employer_name || !full_name || !start_date || !end_date) {
@@ -95,71 +85,90 @@ export const acceptOffer = async (req: Request, res: Response) => {
       });
     }
 
+    // Build the email HTML (after validation, before transaction)
+    const emailHtml = applicationAcceptedTemplate({
+      name: full_name,
+      position: job_title,
+      company: employer_name,
+      date: new Date(start_date).toLocaleDateString(),
+      jobDetailsUrl: `${process.env.CLIENT_ORIGIN}/${ROLE.JOBSEEKER}/message` 
+    });
+
+    // ✅ Start transaction here
     await connection.beginTransaction();
 
     // 1. Get the employer_id from the message or conversation
     let employerId: number | null = null;
 
     if (message_id) {
-        const [messageRows] = await connection.execute<RowDataPacket[]>(
-            'SELECT sender_id FROM messages WHERE message_id = ?',
-            [message_id]
-        );
+      const [messageRows] = await connection.execute<RowDataPacket[]>(
+        'SELECT sender_id FROM messages WHERE message_id = ?',
+        [message_id]
+      );
 
-    if (messageRows.length > 0) {
+      if (messageRows.length > 0) {
         employerId = messageRows[0]?.sender_id;
-        }
+      }
     }
 
     if (!employerId) {
-        await connection.rollback();
-        return res.status(400).json({
-            success: false,
-            message: 'Invalid message_id: employer not found.'
-        });
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid message_id: employer not found.'
+      });
     }
 
-   // 2. Update the hires table - UPDATE ONLY (no insert)
-        const [existingHire] = await connection.execute<RowDataPacket[]>(
-        `SELECT hire_id FROM hires WHERE employer_id = ? AND employee_id = ?`,
-        [employerId, userId]
-        );
+    // 2. Update the hires table - UPDATE ONLY (no insert)
+    const [existingHire] = await connection.execute<RowDataPacket[]>(
+      `SELECT hire_id FROM hires WHERE employer_id = ? AND employee_id = ?`,
+      [employerId, userId]
+    );
 
-        if (existingHire.length === 0) {
-        await connection.rollback();
-        return res.status(400).json({
-            success: false,
-            message: 'Hire record does not exist. Cannot update since patch-only mode.'
-        });
-        }
+    if (existingHire.length === 0) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: 'Hire record does not exist. Cannot update since patch-only mode.'
+      });
+    }
 
-        const hireId = existingHire[0]?.hire_id;
+    const hireId = existingHire[0]?.hire_id;
 
-        // Perform UPDATE
-        await connection.execute(
-        `UPDATE hires SET
-            job_title = ?,
-            start_date = ?,
-            end_date = ?,
-            status = 'accepted',
-            message_id = ?,
-            conversation_id = ?,
-            accepted_at = ?
-        WHERE hire_id = ?`,
-        [
-            job_title,
-            mysqlStartDate,
-            mysqlEndDate,
-            message_id ?? null,
-            conversation_id ?? null,
-            mysqlAcceptedAt,
-            hireId
-        ]
-        );
+    // Perform UPDATE
+    await connection.execute(
+      `UPDATE hires SET
+        job_title = ?,
+        start_date = ?,
+        end_date = ?,
+        status = 'accepted',
+        message_id = ?,
+        conversation_id = ?,
+        accepted_at = ?
+      WHERE hire_id = ?`,
+      [
+        job_title,
+        mysqlStartDate,
+        mysqlEndDate,
+        message_id ?? null,
+        conversation_id ?? null,
+        mysqlAcceptedAt,
+        hireId
+      ]
+    );
 
+    // 3. Update job_applications status to accepted for this user and employer
+    await connection.execute(
+      `UPDATE job_applications ja
+       INNER JOIN job_post jp ON jp.job_post_id = ja.job_post_id
+       SET ja.application_status = 'accepted'
+       WHERE ja.applicant_id = ?
+       AND jp.user_id = ?
+       AND ja.application_status != 'accepted'`,
+      [userId, employerId]
+    );
 
-
-    // 3. Update user employment status
+    // 4. Update user employment status
     await connection.execute(
       `UPDATE users 
        SET employment_status = 'hired',
@@ -167,10 +176,10 @@ export const acceptOffer = async (req: Request, res: Response) => {
            employed_end_date = ?,
            employer_id = ?
        WHERE user_id = ?`,
-        [mysqlStartDate, mysqlEndDate, employerId, userId]
+      [mysqlStartDate, mysqlEndDate, employerId, userId]
     );
 
-    // 4. Update the message as read (if message_id exists)
+    // 5. Update the message as read (if message_id exists)
     if (message_id) {
       await connection.execute(
         `UPDATE messages 
@@ -181,7 +190,7 @@ export const acceptOffer = async (req: Request, res: Response) => {
       );
     }
 
-    // 5. Create notification for employer
+    // 6. Create notification for employer
     if (employerId) {
       await connection.execute(
         `INSERT INTO notifications (
@@ -203,18 +212,20 @@ export const acceptOffer = async (req: Request, res: Response) => {
       );
     }
 
-      await sendMail(
+    // 7. Send confirmation email
+    await sendMail(
       req.user.email,
       "Your Job Application Has Been Accepted",
       emailHtml
     );
 
+    // ✅ Commit transaction
     await connection.commit();
 
     return res.status(200).json({
-    success: true,
-    message: 'Job offer accepted successfully',
-    data: {
+      success: true,
+      message: 'Job offer accepted successfully',
+      data: {
         hire_id: hireId,
         job_title,
         employer_name,
@@ -222,9 +233,8 @@ export const acceptOffer = async (req: Request, res: Response) => {
         end_date: endDate,
         status: 'accepted',
         employment_status: 'hired'
-    }
+      }
     });
-
 
   } catch (error: any) {
     await connection.rollback();
@@ -237,4 +247,3 @@ export const acceptOffer = async (req: Request, res: Response) => {
     connection.release();
   }
 };
-

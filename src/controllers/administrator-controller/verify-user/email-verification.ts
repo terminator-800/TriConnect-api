@@ -1,3 +1,4 @@
+import nodemailer from 'nodemailer';
 import logger from '../../../config/logger.js';
 import sendMail from '../../../service/email-handler.js';
 
@@ -8,20 +9,20 @@ if (!EMAIL_USER || !EMAIL_PASS) {
   process.exit(1);
 }
 
-export async function sendRejectionEmail(to: string, displayName: string) {
-  const subject = 'TriConnect Account Rejected';
-  const html = rejectionEmailHTML(displayName);
+export async function sendVerificationEmail(to: string, displayName: string) {
+  const subject = 'TriConnect Account Approved';
+  const html = approvalEmailHTML(displayName);
 
   try {
     await sendMail(to, subject, html);
-    logger.info(`Rejection email sent to ${to}`);
+    logger.info(`Verification email sent to ${to}`);
   } catch (error: unknown) {
-    logger.error(`Failed to send rejection email to ${to}`, { error });
-    console.log(`Failed to send rejection email to ${to}`, { error });
+    logger.error(`Failed to send verification email to ${to}`, { error });
+    console.log(`Failed to send verification email to ${to}`, { error });
   }
 }
 
-export function rejectionEmailHTML(displayName: string) {
+export function approvalEmailHTML(displayName: string) {
   return `
     <html>
     <head>
@@ -37,23 +38,23 @@ export function rejectionEmailHTML(displayName: string) {
       <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F5F5F5; padding:50px 0;">
         <tr>
           <td align="center">
-            <table class="container" width="400" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; max-width:400px; width:100%;">
+            <table class="container" width="400" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; font-family:'Inter', Arial, sans-serif; max-width:400px; width:100%;">
               <tr>
-                <td style="background-color:#FF4C4C; color:#ffffff; text-align:center; padding:20px; font-size:20px; font-weight:bold;">
-                  Account Rejected
+                <td style="background-color:#30AF35; color:#ffffff; text-align:center; padding:20px; font-size:20px; font-weight:bold;">
+                  Account Approved!
                 </td>
               </tr>
               <tr>
                 <td style="padding:30px; color:#333333; font-size:14px; line-height:20px;">
                   <p>Hi, ${displayName},</p>
-                  <p>We reviewed the documents you submitted, but unfortunately, we cannot approve your account at this time.</p>
-                  <p>To continue using TriConnect, please re-upload the correct or complete requirements.</p>
+                  <p>Congratulations! Your TriConnect account has been approved by our admin team.</p>
+                  <p>You can now log in and start using all the features of your account.</p>
                   <p style="text-align:center; margin:30px 0;">
-                    <a href="${CLIENT_ORIGIN}/login" class="button" style="background-color:#D71E1E; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:5px; display:inline-block; font-weight:bold;">
-                      Resubmit Again
+                    <a href="${CLIENT_ORIGIN}/login" class="button" style="background-color:#30AF35; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:5px; display:inline-block; font-weight:bold;">
+                      Go to Dashboard
                     </a>
                   </p>
-                  <p>Best Regards,<br>The <strong>TriConnect Team</strong></p>
+                  <p>Thank you,<br>The <strong>TriConnect Team</strong></p>
                 </td>
               </tr>
             </table>

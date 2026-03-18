@@ -73,14 +73,13 @@ export interface ManpowerProviderPayload extends BasePayload {
   agency_certificate_public_id: string;
 }
 
-type Payload =
+export type Payload =
   | JobseekerPayload
   | IndividualEmployerPayload
   | BusinessEmployerPayload
   | ManpowerProviderPayload;
 
-export async function uploadUserRequirement(connection: PoolConnection, payload: Payload) {
-  try {
+export async function insertUserRequirement(connection: PoolConnection, payload: Payload) {
     switch (payload.role) {
       case 'jobseeker':
         await connection.execute<ResultSetHeader>(
@@ -212,7 +211,5 @@ export async function uploadUserRequirement(connection: PoolConnection, payload:
              WHERE user_id = ?`,
       [payload.user_id]
     );
-  } catch (error) {
-    throw error;
-  }
+ 
 }

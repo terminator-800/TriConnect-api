@@ -1,7 +1,7 @@
 import express from 'express';
 import { registerUser } from '../controllers/userController/register/register-user-account.js';
 import { verifyEmail } from '../controllers/userController/email-verification/email-verification.js';
-import { uploadRequirement } from '../controllers/userController/upload-requirement/upload-user-requirement.js';
+import { uploadRequirement } from '../controllers/userController/upload-requirement/upload.requirement.controller.js';
 import { getUserProfile } from '../controllers/userController/user-profile/user-profile.js';
 import { apply } from '../controllers/userController/apply/apply-job-post.js';
 import { conversations } from '../controllers/userController/messageController/conversation/conversations.js';
@@ -13,7 +13,7 @@ import { uncontactedAgencies } from '../controllers/userController/uncontacted-a
 import { validateRegisterInput } from '../middleware/validate-register-input.js';
 import { reportedUsers } from '../controllers/report-controller/reported-user/reported-user.js';
 import { reportUser } from '../controllers/report-controller/report-user/report-user.js';
-import { chatImageUpload, reportUpload } from '../middleware/upload-files.js';
+import { chatImageUpload, reportUpload, uploadResume } from '../middleware/upload-files.js';
 import { uploadJobseekerFiles } from '../middleware/upload-files.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { submitFeedback } from '../controllers/userController/submit-feedback/submit-feedback.js';
@@ -23,18 +23,13 @@ import { getNotified } from '../controllers/userController/notification/get-noti
 import { markNotificationSeen } from '../controllers/userController/notification/seen-notification.js';
 import { acceptOffer } from '../controllers/userController/accept-decline-offer/accept-offer.js';
 import { declineOffer } from '../controllers/userController/accept-decline-offer/decline-offer.js';
-
+import { uploadResumeController } from '../controllers/userController/upload-resume/upload-resume.js'
 const router = express.Router();
 
 router.post('/register/jobseeker', validateRegisterInput, registerUser);
 router.get('/jobseeker/verify', verifyEmail);
 router.get('/jobseeker/profile', authenticate, getUserProfile);
-router.post(
-  '/jobseeker/upload-requirements',
-  authenticate,
-  uploadJobseekerFiles,
-  uploadRequirement
-);
+router.post('/jobseeker/upload-requirements', authenticate, uploadJobseekerFiles, uploadRequirement);
 router.post('/jobseeker/applications', authenticate, chatImageUpload, apply);
 router.get('/jobseeker/conversations', authenticate, conversations);
 router.get('/jobseeker/message-history/:conversation_id', authenticate, messageHistory);
@@ -50,6 +45,6 @@ router.get('/jobseeker/notification', authenticate, getNotified);
 router.patch('/jobseeker/notification/:notification_id/seen', authenticate, markNotificationSeen);
 router.patch('/jobseeker/accept-offer', authenticate, acceptOffer);
 router.patch('/jobseeker/decline-offer', authenticate, declineOffer);
-
+router.post('/jobseeker/upload-resume', authenticate, uploadResume, uploadResumeController)
 
 export default router;

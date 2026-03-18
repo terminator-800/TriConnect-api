@@ -127,8 +127,7 @@ export const getUserConversations = async (
     );
 
     return rows.map((row) => {
-      const preview =
-        row.message_type === 'file' ? row.file_name || '' : row.message_text || 'No message';
+      const preview = row.message_type === 'file' ? row.file_name || '' : row.message_text || 'No message';
 
       const base: BaseConversation = {
         conversation_id: row.conversation_id,
@@ -136,7 +135,7 @@ export const getUserConversations = async (
         role: row.role,
         message_text: preview,
         sent_at: row.sent_at ? format(new Date(row.sent_at), "'at' h:mm a") : null,
-        job_title: row.job_title || null, // ✅ add this
+        job_title: row.job_title || null, 
       };
 
       switch (row.role) {

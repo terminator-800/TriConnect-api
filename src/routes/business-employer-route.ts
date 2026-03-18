@@ -1,7 +1,7 @@
 import express from 'express';
 import { registerUser } from '../controllers/userController/register/register-user-account.js';
 import { verifyEmail } from '../controllers/userController/email-verification/email-verification.js';
-import { uploadRequirement } from '../controllers/userController/upload-requirement/upload-user-requirement.js';
+import { uploadRequirement } from '../controllers/userController/upload-requirement/upload.requirement.controller.js';
 import { getUserProfile } from '../controllers/userController/user-profile/user-profile.js';
 import { createJobPost } from '../controllers/userController/create-job-post/create-job-post.js';
 import { conversations } from '../controllers/userController/messageController/conversation/conversations.js';
@@ -37,17 +37,15 @@ const router = express.Router();
 router.post('/register/business-employer', validateRegisterInput, registerUser);
 router.get('/business-employer/verify', verifyEmail);
 router.get('/business-employer/profile', authenticate, getUserProfile);
-router.post(
-  '/business-employer/upload-requirements',
-  authenticate,
-  uploadBusinessEmployerFiles,
-  uploadRequirement
-);
+router.post('/business-employer/upload-requirements', authenticate, uploadBusinessEmployerFiles, uploadRequirement);
 router.post('/business-employer/job-post', authenticate, createJobPost);
 router.get('/business-employer/conversations', authenticate, conversations);
 router.get('/business-employer/message-history/:conversation_id', authenticate, messageHistory);
 router.post('/business-employer/messages/send', authenticate, chatImageUpload, replyMessage);
 router.patch('/business-employer/mark-as-seen', authenticate, markAsSeen);
+// application_id should be above, otherwise it will conflict with the :jobPostId route
+router.patch('/business-employer/applications/:application_id/reject', authenticate, rejectApplication);
+router.patch('/business-employer/notification/:notification_id/seen', authenticate, markNotificationSeen);
 router.patch('/business-employer/:jobPostId/:status/:postType', authenticate, updateJobPostStatus);
 router.delete('/business-employer/delete/jobpost/:jobPostId', authenticate, softDeleteJobPost);
 router.post('/business-employer/message-agency', authenticate, chatImageUpload, contactAgency);
@@ -57,19 +55,9 @@ router.get('/business-employer/reported-users', authenticate, reportedUsers);
 router.post('/business-employer/feedback', authenticate, submitFeedback);
 router.get('/business-employer/applicants', authenticate, viewApplicants);
 router.get('/business-employer/dashboard', authenticate, employerDashboard);
-router.patch(
-  '/business-employer/applications/:applicationId/reject',
-  authenticate,
-  rejectApplication
-);
 router.patch('/business-employer/change-profile', authenticate, changeUserProfile, changeProfile);
 router.put('/business-employer/edit-job-post/:job_post_id', authenticate, editJobPost);
 router.get('/business-employer/notification', authenticate, getNotified);
-router.patch(
-  '/business-employer/notification/:notification_id/seen',
-  authenticate,
-  markNotificationSeen
-);
 router.get('/business-employer/manpower-posts', authenticate, getAgencyPostsController);
 router.post('/business-employer/requests', authenticate, apply);
 router.post('/business-employer/hire-applicant', authenticate, hireApplicant);

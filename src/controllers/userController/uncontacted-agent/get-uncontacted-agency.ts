@@ -43,7 +43,11 @@ export const getUncontactedAgencies = async (
         (c.user1_id = ? AND c.user2_id = u.user_id)
         OR (c.user2_id = ? AND c.user1_id = u.user_id)
       )
-    WHERE u.role = 'manpower-provider' AND c.conversation_id IS NULL
+      WHERE 
+    u.role = 'manpower-provider'
+    AND u.is_registered = 1        -- ✅ registered only
+    AND u.is_verified = 1          -- ✅ verified only
+    AND c.conversation_id IS NULL
     `,
       [userId, userId]
     );

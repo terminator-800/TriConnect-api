@@ -34,8 +34,8 @@ export const apply = async (req: CustomRequest, res: Response) => {
     current_address,
     cover_letter,
     job_post_id,
-    individual_job_post_id,
-    team_job_post_id,
+    // individual_job_post_id,
+    // team_job_post_id,
     job_title,
     employer_name,
     company_name,
@@ -44,10 +44,12 @@ export const apply = async (req: CustomRequest, res: Response) => {
     project_description,
     express_message,
   } = req.body;
-
+  console.log(express_message, "EXPRESS MESSAGE");
+  
   const sender_id = req.user?.user_id;
   const role = req.user?.role;
-
+  // console.log("REQUEST BODY", req.body);
+  
   if (!sender_id || !role) {
     return res.status(401).json({ error: 'Unauthorized: missing user info' });
   }
@@ -60,15 +62,10 @@ export const apply = async (req: CustomRequest, res: Response) => {
   try {
     connection = await pool.getConnection();
     await connection.beginTransaction();
-        // Determine which job_post_id to use and prepare params
-    console.log("jobpostid",job_post_id, 
-                'individualjobpostid', individual_job_post_id, 
-                'teamjobpostid',team_job_post_id,);
-    
     const ids = {
     job_post_id,
-    individual_job_post_id,
-    team_job_post_id,
+    // individual_job_post_id,
+    // team_job_post_id,
   };
 
   const providedIds = Object.values(ids).filter(Boolean).length;
@@ -85,20 +82,22 @@ export const apply = async (req: CustomRequest, res: Response) => {
         job_post_id: Number(job_post_id),
         table_name: "job_post",
         applicant_id: sender_id,
-        });
-      } else if (individual_job_post_id) {
-        await insertJobApplication(connection, {
-          individual_job_post_id: Number(individual_job_post_id),
-          table_name: "individual_job_post",
-          applicant_id: sender_id,
-        });
-      } else if (team_job_post_id) {
-        await insertJobApplication(connection, {
-          team_job_post_id: Number(team_job_post_id),
-          table_name: "team_job_post",
-          applicant_id: sender_id,
+        employer_id: receiver_id,
         });
       }
+      //  else if (individual_job_post_id) {
+      //   await insertJobApplication(connection, {
+      //     individual_job_post_id: Number(individual_job_post_id),
+      //     table_name: "individual_job_post",
+      //     applicant_id: sender_id,
+      //   });
+      // } else if (team_job_post_id) {
+      //   await insertJobApplication(connection, {
+      //     team_job_post_id: Number(team_job_post_id),
+      //     table_name: "team_job_post",
+      //     applicant_id: sender_id,
+      //   });
+      // }
 
     const uploadedFiles = Array.isArray(req.files)
       ? await Promise.all(
@@ -113,16 +112,16 @@ export const apply = async (req: CustomRequest, res: Response) => {
       sender_id,
       receiver_id,
       cover_letter,
-      full_name,
-      phone_number,
-      email_address,
-      current_address,
+      // full_name,
+      // phone_number,
+      // email_address,
+      // current_address,
       job_title,
-      employer_name,
-      company_name,
-      project_location,
-      start_date,
-      project_description,
+      // employer_name,
+      // company_name,
+      // project_location,
+      // start_date,
+      // project_description,
       resume: uploadedFiles[0]!,
       express_message,
     });

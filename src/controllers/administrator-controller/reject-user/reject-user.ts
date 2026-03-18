@@ -6,8 +6,7 @@ import { extractPublicIdFromUrl } from '../../../service/extract-public-id-url.j
 import { deleteFromCloudinary } from '../../../utils/delete-from-cloudinary.js';
 import pool from '../../../config/database-connection.js';
 import logger from '../../../config/logger.js';
-import { getRejectionEmailHTML } from './email-rejection.js';
-import { sendUserEmail } from './email-rejection.js';
+import { sendRejectionEmail } from './email-rejection.js';
 import { notifyUser } from '../../userController/notification/notify-user.js';
 import { getNotifierCredentials } from '../../userController/notification/get-notified.js';
 
@@ -20,6 +19,18 @@ interface RejectUserResult {
   message: string;
   displayName: string;
 }
+
+// notify user of rejection with personalized message based on their role and name
+const notifyUserOfRejection = async (user_id: number, displayName: string) => {
+      const notifier_id = 1; // always admin user_id is 1 for notifications
+      await notifyUser(
+        user_id,
+        'REQUIREMENTS REJECTED',
+        `Hi, ${displayName}, your submitted requirements have been rejected by our Administrator. Please check your email for details and resubmit the correct documents.`,
+        'account_verification',
+        notifier_id
+      );
+};
 
 export const rejectUser = async (req: Request<RejectUserParams>, res: Response): Promise<void> => {
   const user_id: number | undefined = req.params.user_id;
@@ -34,51 +45,24 @@ export const rejectUser = async (req: Request<RejectUserParams>, res: Response):
 
   try {
     connection = await pool.getConnection();
-    const result = await rejectUsers(connection, user_id as number);
-
+    
     const [emailRows] = await connection.execute<RowDataPacket[]>(
       `SELECT email FROM users WHERE user_id = ?`,
       [user_id]
     );
+
     const userEmail = emailRows[0]?.email;
 
-    if (userEmail) {
-      await sendUserEmail(
-        userEmail,
-        'TriConnect Account Rejected',
-        getRejectionEmailHTML(result.displayName)
-      );
-    }
+    const result = await rejectUsers(connection, user_id as number);
+    connection.release();
+    connection = undefined;
 
-    const displayName = await getNotifierCredentials(user_id);
+    // email for rejection notification
+    await Promise.all([
+      notifyUserOfRejection(user_id, result.displayName),
+      sendRejectionEmail(userEmail, result.displayName),
+    ]);
 
-    const io = req.app.get('io');
-    const userSocketMap = req.app.get('userSocketMap');
-    const socketId = userSocketMap[user_id];
-
-    try {
-      if (socketId) {
-        io.to(socketId).emit('notification', {
-          title: 'REQUIREMENTS REJECTED',
-          message: `Hi ${displayName}, your submitted requirements have been rejected. Please check your email for details and resubmit the correct documents.`,
-          type: 'account_verification',
-          notifier_id: req.user?.user_id,
-          created_at: new Date(),
-        });
-      }
-    } catch (socketError) {
-      logger.error('Failed to emit socket notification', { user_id, socketError });
-    }
-
-    await notifyUser(
-      Number(user_id),
-      'REQUIREMENTS REJECTED',
-      `Hi ${displayName}, Your submitted requirements have been rejected. Please check your email for details and resubmit the correct documents.`,
-      'account_verification',
-      req.user?.user_id ?? null
-    );
-
-    logger.info(`User ${user_id} rejected successfully`);
     res.json({ success: true, message: result.message });
   } catch (error: any) {
     logger.error(`Failed to reject: (User ID: ${user_id}) in reject user`, {
@@ -90,6 +74,7 @@ export const rejectUser = async (req: Request<RejectUserParams>, res: Response):
       cause: error?.cause || 'No cause',
       error,
     });
+    console.log(`Failed to reject: (User ID: ${user_id}) in reject user`);
     res.status(500).json({ message: 'Internal server error.' });
   } finally {
     if (connection) connection.release();

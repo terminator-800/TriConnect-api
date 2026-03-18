@@ -16,6 +16,7 @@ export interface JobseekerProfile {
   account_status: string;
   role: typeof ROLE.JOBSEEKER;
   profile?: string | null;
+  resume?: string | null; // <-- add this
   // Employment fields for disabled account
   employment_status: 'available' | 'hired' | 'member';
   employer_id?: number | null;
@@ -39,6 +40,7 @@ export async function getJobseekerProfile(
         j.gender,
         j.phone,
         j.date_of_birth,
+        j.resume,  
         u.is_verified,
         u.is_submitted,
         u.is_rejected,
@@ -101,6 +103,7 @@ export async function getJobseekerProfile(
       account_status: row.account_status,
       role: ROLE.JOBSEEKER,
       profile: row.profile || null,
+      resume: row.resume || null, // <-- map resume here
       // Employment fields
       employment_status: row.employment_status || 'available',
       employer_id: row.employer_id || null,

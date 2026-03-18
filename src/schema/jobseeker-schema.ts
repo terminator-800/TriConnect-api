@@ -13,6 +13,7 @@ export async function createJobseekerTable(connection: Pool | PoolConnection) {
       permanent_address VARCHAR(255),
       education TEXT,
       skills TEXT,
+      resume VARCHAR(255),
       government_id VARCHAR(255),
       selfie_with_id VARCHAR(255),
       nbi_barangay_clearance VARCHAR(255),

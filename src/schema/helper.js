@@ -45,7 +45,6 @@ export async function createBusinessEmployerTable() {
       business_permit_BIR VARCHAR(255),
       DTI VARCHAR(255),
       business_establishment VARCHAR(255),
-      profile VARCHAR(255), 
       FOREIGN KEY (business_employer_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
   `;
@@ -65,7 +64,6 @@ export async function createIndividualEmployerTable() {
       government_id VARCHAR(255),
       selfie_with_id VARCHAR(255),
       nbi_barangay_clearance VARCHAR(255),
-      profile VARCHAR(255), 
       FOREIGN KEY (individual_employer_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
   `;
@@ -84,10 +82,11 @@ export async function createJobseekerTable() {
       permanent_address VARCHAR(255),
       education TEXT,
       skills TEXT,
+      resume VARCHAR(255),
       government_id VARCHAR(255),
       selfie_with_id VARCHAR(255),
       nbi_barangay_clearance VARCHAR(255),
-      profile VARCHAR(255), 
+      resume VARCHAR(255),       
       FOREIGN KEY (jobseeker_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
 `;
@@ -106,7 +105,6 @@ export async function createManpowerProviderTable() {
       mayors_permit VARCHAR(255),
       agency_certificate VARCHAR(255),
       authorized_person_id VARCHAR(255),
-      profile VARCHAR(255), 
       FOREIGN KEY (manpower_provider_id) REFERENCES users(user_id) ON DELETE CASCADE
     );
   `;
@@ -155,6 +153,12 @@ export async function createJobApplicationsTable() {
       FOREIGN KEY (individual_job_post_id) REFERENCES individual_job_post(individual_job_post_id) ON DELETE CASCADE,
       FOREIGN KEY (team_job_post_id) REFERENCES team_job_post(team_job_post_id) ON DELETE CASCADE,
       FOREIGN KEY (applicant_id) REFERENCES users(user_id) ON DELETE CASCADE
+      FOREIGN KEY (employer_id) REFERENCES users(user_id) ON DELETE CASCADE, -- Link to employer
+
+      INDEX idx_employer_id (employer_id), -- For faster employer queries
+      INDEX idx_applicant_id (applicant_id), -- For faster applicant queries
+      INDEX idx_job_post_id (job_post_id) -- For faster job post queries
+
     );
   `;
 }
@@ -178,6 +182,7 @@ export async function createJobPostTable() {
       location VARCHAR(255),
       required_skill TEXT,
       job_description TEXT,
+      number_of_worker INT DEFAULT NULL,
       applicant_count INT DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE 
@@ -185,67 +190,67 @@ export async function createJobPostTable() {
   `;
 }
 
-export async function createIndividualJobPostTable() {
-  const query = `
-    CREATE TABLE IF NOT EXISTS individual_job_post (
-      individual_job_post_id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT NOT NULL, -- Foreign key to reference the user
-      status ENUM('pending', 'approved', 'rejected', 'draft') DEFAULT NULL,
-      jobpost_status ENUM('pending', 'active', 'paused', 'completed', 'archive', 'deleted') DEFAULT NULL,
-      submitted_at DATETIME DEFAULT NULL,
-      approved_at DATETIME DEFAULT NULL,
-      expires_at DATETIME DEFAULT NULL,
-      rejection_reason TEXT DEFAULT NULL,
-      is_verified_jobpost BOOLEAN DEFAULT FALSE,
-      worker_name VARCHAR(255) DEFAULT NULL,
-      worker_category VARCHAR(255) DEFAULT NULL,
-      years_of_experience INT DEFAULT NULL,
-      location VARCHAR(255) DEFAULT NULL,
-      qualifications TEXT DEFAULT NULL,
-      skill VARCHAR(255) DEFAULT NULL,
-      applicant_count INT DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE 
-    );
-  `;
-  try {
-    await connection.execute(query);
-  } catch (error) {
-    throw error;
-  }
-}
+// export async function createIndividualJobPostTable() {
+//   const query = `
+//     CREATE TABLE IF NOT EXISTS individual_job_post (
+//       individual_job_post_id INT AUTO_INCREMENT PRIMARY KEY,
+//       user_id INT NOT NULL, -- Foreign key to reference the user
+//       status ENUM('pending', 'approved', 'rejected', 'draft') DEFAULT NULL,
+//       jobpost_status ENUM('pending', 'active', 'paused', 'completed', 'archive', 'deleted') DEFAULT NULL,
+//       submitted_at DATETIME DEFAULT NULL,
+//       approved_at DATETIME DEFAULT NULL,
+//       expires_at DATETIME DEFAULT NULL,
+//       rejection_reason TEXT DEFAULT NULL,
+//       is_verified_jobpost BOOLEAN DEFAULT FALSE,
+//       worker_name VARCHAR(255) DEFAULT NULL,
+//       worker_category VARCHAR(255) DEFAULT NULL,
+//       years_of_experience INT DEFAULT NULL,
+//       location VARCHAR(255) DEFAULT NULL,
+//       qualifications TEXT DEFAULT NULL,
+//       skill VARCHAR(255) DEFAULT NULL,
+//       applicant_count INT DEFAULT 0,
+//       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE 
+//     );
+//   `;
+//   try {
+//     await connection.execute(query);
+//   } catch (error) {
+//     throw error;
+//   }
+// }
 
-export async function createTeamJobPostTable() {
-  const query = `
-    CREATE TABLE IF NOT EXISTS team_job_post (
-      team_job_post_id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT NOT NULL, -- Foreign key to reference the user
-      status ENUM('pending', 'approved', 'rejected', 'draft') DEFAULT NULL,
-      jobpost_status ENUM('pending', 'active', 'paused', 'completed', 'archive', 'deleted') DEFAULT NULL,
-      submitted_at DATETIME DEFAULT NULL,
-      approved_at DATETIME DEFAULT NULL,
-      expires_at DATETIME DEFAULT NULL,
-      rejection_reason TEXT DEFAULT NULL,
-      is_verified_jobpost BOOLEAN DEFAULT FALSE,
-      worker_category VARCHAR(255) DEFAULT NULL,
-      number_of_workers INT DEFAULT NULL,
-      location VARCHAR(255) DEFAULT NULL,
-      senior_workers INT DEFAULT NULL,
-      mid_level_workers INT DEFAULT NULL,
-      junior_workers INT DEFAULT NULL,
-      entry_level_workers INT DEFAULT NULL,
-      team_skills TEXT DEFAULT NULL,
-      applicant_count INT DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE 
-    );
-  `;
-  try {
-    await connection.execute(query);
-  } catch (error) {
-    throw error;
-  }
-}
+// export async function createTeamJobPostTable() {
+//   const query = `
+//     CREATE TABLE IF NOT EXISTS team_job_post (
+//       team_job_post_id INT AUTO_INCREMENT PRIMARY KEY,
+//       user_id INT NOT NULL, -- Foreign key to reference the user
+//       status ENUM('pending', 'approved', 'rejected', 'draft') DEFAULT NULL,
+//       jobpost_status ENUM('pending', 'active', 'paused', 'completed', 'archive', 'deleted') DEFAULT NULL,
+//       submitted_at DATETIME DEFAULT NULL,
+//       approved_at DATETIME DEFAULT NULL,
+//       expires_at DATETIME DEFAULT NULL,
+//       rejection_reason TEXT DEFAULT NULL,
+//       is_verified_jobpost BOOLEAN DEFAULT FALSE,
+//       worker_category VARCHAR(255) DEFAULT NULL,
+//       number_of_workers INT DEFAULT NULL,
+//       location VARCHAR(255) DEFAULT NULL,
+//       senior_workers INT DEFAULT NULL,
+//       mid_level_workers INT DEFAULT NULL,
+//       junior_workers INT DEFAULT NULL,
+//       entry_level_workers INT DEFAULT NULL,
+//       team_skills TEXT DEFAULT NULL,
+//       applicant_count INT DEFAULT 0,
+//       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE 
+//     );
+//   `;
+//   try {
+//     await connection.execute(query);
+//   } catch (error) {
+//     throw error;
+//   }
+// }
 
 // Messages Schema
 export async function createMessagesTable() {
@@ -358,9 +363,9 @@ export async function createHiresTable() {
         hire_id INT AUTO_INCREMENT PRIMARY KEY,
         employer_id INT NOT NULL,
         employee_id INT NOT NULL,
-        job_title VARCHAR(255) NOT NULL,
-        start_date DATE NOT NULL,
-        end_date DATE NOT NULL,
+        job_title VARCHAR(255) NULL,
+        start_date DATE NULL,
+        end_date DATE NULL,
         status ENUM('pending', 'accepted', 'rejected', 'active', 'completed', 'terminated') DEFAULT 'pending',
         message_id INT NULL,
         conversation_id INT NULL,

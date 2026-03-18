@@ -19,6 +19,7 @@ export async function createJobPostTable(connection: Pool | PoolConnection) {
       location VARCHAR(255),
       required_skill TEXT,
       job_description TEXT,
+      number_of_worker INT DEFAULT NULL,
       applicant_count INT DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE 
@@ -57,6 +58,7 @@ export async function createIndividualJobPostTable(connection: Pool | PoolConnec
   try {
     await connection.execute(query);
   } catch (error) {
+    console.log("Error at: job-post-schema.ts", error);
     throw error;
   }
 }

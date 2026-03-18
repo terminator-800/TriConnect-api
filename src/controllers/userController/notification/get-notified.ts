@@ -69,7 +69,7 @@ export const getNotified = async (req: CustomRequest, res: Response) => {
   }
 };
 
-export async function getNotifierCredentials(notifier_id: number) {
+export async function getNotifierCredentials(user_id: number) {
   let connection: PoolConnection | undefined;
   try {
     connection = await pool.getConnection();
@@ -77,7 +77,7 @@ export async function getNotifierCredentials(notifier_id: number) {
     // 1. Get the role of the notifier
     const [userRows] = await connection.execute<RowDataPacket[]>(
       `SELECT role FROM users WHERE user_id = ?`,
-      [notifier_id]
+      [user_id]
     );
 
     if (!userRows.length) {
@@ -94,7 +94,7 @@ export async function getNotifierCredentials(notifier_id: number) {
       case 'jobseeker': {
         const [rows] = await connection.execute<RowDataPacket[]>(
           `SELECT full_name FROM jobseeker WHERE jobseeker_id = ?`,
-          [notifier_id]
+          [user_id]
         );
         return rows.length ? { role, full_name: rows[0]?.full_name } : null;
       }
@@ -102,7 +102,7 @@ export async function getNotifierCredentials(notifier_id: number) {
       case 'business-employer': {
         const [rows] = await connection.execute<RowDataPacket[]>(
           `SELECT business_name, authorized_person FROM business_employer WHERE business_employer_id = ?`,
-          [notifier_id]
+          [user_id]
         );
         return rows.length
           ? {
@@ -116,7 +116,7 @@ export async function getNotifierCredentials(notifier_id: number) {
       case 'individual-employer': {
         const [rows] = await connection.execute<RowDataPacket[]>(
           `SELECT full_name FROM individual_employer WHERE individual_employer_id = ?`,
-          [notifier_id]
+          [user_id]
         );
         return rows.length ? { role, full_name: rows[0]?.full_name } : null;
       }
@@ -124,7 +124,7 @@ export async function getNotifierCredentials(notifier_id: number) {
       case 'manpower-provider': {
         const [rows] = await connection.execute<RowDataPacket[]>(
           `SELECT agency_name, agency_authorized_person FROM manpower_provider WHERE manpower_provider_id = ?`,
-          [notifier_id]
+          [user_id]
         );
         return rows.length
           ? {
@@ -139,7 +139,7 @@ export async function getNotifierCredentials(notifier_id: number) {
         return { role }; // fallback
     }
   } catch (error: any) {
-    logger.error('Failed to fetch notifier credentials', { notifier_id, error });
+    logger.error('Failed to fetch notifier credentials', { user_id, error });
     return null;
   } finally {
     if (connection) connection.release();

@@ -5,15 +5,15 @@ import { applicationDeclinedTemplate } from './decline-email.js';
 import sendMail from '../../../service/email-handler.js';
 import { ROLE } from '../../../utils/roles.js';
 
-  interface DeclineOfferRequest {
-    job_title: string;
-    employer_name: string;
-    rejection_reason?: string;
-    message_id?: number;
-    conversation_id?: number;
-  }
+interface DeclineOfferRequest {
+  job_title: string;
+  employer_name: string;
+  rejection_reason?: string;
+  message_id?: number;
+  conversation_id?: number;
+}
 
- const allowedRoles = [
+const allowedRoles = [
   ROLE.MANPOWER_PROVIDER,
   ROLE.BUSINESS_EMPLOYER,
   ROLE.INDIVIDUAL_EMPLOYER
@@ -49,7 +49,7 @@ export const declineOffer = async (req: Request, res: Response) => {
       });
     }
 
-  // Get full name based on role
+    // Get full name based on role
     let fullNameQuery = "";
     let fullNameParams = [userId];
 
@@ -76,7 +76,6 @@ export const declineOffer = async (req: Request, res: Response) => {
 
     const [nameRows] = await connection.execute<RowDataPacket[]>(fullNameQuery, fullNameParams);
     const fullName = nameRows[0]?.name ?? "User";
-
 
     // Validate required fields
     if (!job_title || !employer_name) {
@@ -153,6 +152,17 @@ export const declineOffer = async (req: Request, res: Response) => {
       ]
     );
 
+    // Update job_applications status to rejected for this user and employer
+    await connection.execute(
+      `UPDATE job_applications ja
+       INNER JOIN job_post jp ON jp.job_post_id = ja.job_post_id
+       SET ja.application_status = 'rejected'
+       WHERE ja.applicant_id = ?
+       AND jp.user_id = ?
+       AND ja.application_status != 'rejected'`,
+      [userId, employerId]
+    );
+
     // Mark message as read
     if (message_id) {
       await connection.execute(
@@ -186,18 +196,18 @@ export const declineOffer = async (req: Request, res: Response) => {
       );
     }
 
-      const [employerRows] = await connection.execute<RowDataPacket[]>(
-        "SELECT email FROM users WHERE user_id = ?",
-        [employerId]
-      );
+    const [employerRows] = await connection.execute<RowDataPacket[]>(
+      "SELECT email FROM users WHERE user_id = ?",
+      [employerId]
+    );
 
     const employerEmail = employerRows[0]?.email;
 
-     await sendMail(
-        employerEmail,
-          "Your Job Application Has Been Rejected",
-          emailHtml
-      );
+    await sendMail(
+      employerEmail,
+      "Your Job Application Has Been Rejected",
+      emailHtml
+    );
 
     await connection.commit();
 

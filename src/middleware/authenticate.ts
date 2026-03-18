@@ -74,6 +74,7 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
       cause: error?.cause || 'No cause',
       error,
     });
+    console.error('Token verification error:', error);
     res.status(401).json({ error: 'Unauthorized: Invalid token.' });
   }
 };

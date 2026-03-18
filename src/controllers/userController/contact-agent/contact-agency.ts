@@ -22,6 +22,12 @@ interface HandleMessageUploadParams {
   sender_id: number;
   receiver_id: number;
   message?: string;
+  employer_name?: string;
+  phone_number?: string;
+  email_address?: string;
+  project_location?: string;
+  start_date?: string;
+  project_description?: string;
   files?: FileUpload[];
 }
 
@@ -36,9 +42,19 @@ export const contactAgency: RequestHandler = async (request: Request, res: Respo
   const role = r.user?.role;
   const ip = request.ip;
   const sender_id = r.user?.user_id;
-  const { receiver_id, message } = request.body as { receiver_id: number; message: string };
-
-  if (!sender_id || !receiver_id || !message) {
+  const { 
+    receiver_id, 
+    message, 
+    employer_name, 
+    phone_number,
+    email_address, 
+    project_location, 
+    start_date, 
+    project_description 
+    } = request.body; 
+  console.log("Contact agency:", request.body);
+  
+  if (!sender_id || !receiver_id) {
     return res.status(400).json({ error: 'Missing sender_id, receiver_id, or message' });
   }
 
@@ -78,9 +94,16 @@ export const contactAgency: RequestHandler = async (request: Request, res: Respo
       sender_id,
       receiver_id,
       message,
+      employer_name,
+      phone_number,
+      email_address,
+      project_location,
+      start_date,
+      project_description,
       files: uploadedFiles!,
     };
-
+    console.log("PARAMS FOR HANDLE MESSAGE UPLOAD IN CONTACT AGENCY: ", params);
+    
     const newMessage = (await handleMessageUpload(connection, request, params)) as RowDataPacket;
 
     if (!newMessage?.conversation_id) {

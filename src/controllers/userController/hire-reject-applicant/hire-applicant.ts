@@ -1,8 +1,9 @@
 import type { Request, Response } from 'express';
-import type { PoolConnection, ResultSetHeader } from 'mysql2/promise';
+import type { PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import pool from '../../../config/database-connection.js';
 import { handleMessageUpload } from '../../../service/handle-message-upload-service.js';
 import { notifyUser } from '../notification/notify-user.js';
+import { checkOffer } from './check-offer.js';
 
 interface HireApplicantRequest {
   employee_id: number;
@@ -29,7 +30,19 @@ export const hireApplicant = async (req: Request, res: Response): Promise<Respon
       employer_name,
       hire_message
     } = req.body as HireApplicantRequest;
-
+    
+    // LOGGING
+    // console.log(
+    //   "employee_id: ", employee_id,
+    //   "job_title: ", job_title,
+    //   "start_date: ", start_date,
+    //   "end_date: ", end_date,
+    //   "conversation_id: ", conversation_id,
+    //   "full_name: ", full_name,
+    //   "employer_name: ", employer_name,
+    //   "hire_message: ", hire_message
+    // );
+    
     // Get employer_id from authenticated user
     const employer_id = req.user?.user_id;
 
@@ -51,8 +64,25 @@ export const hireApplicant = async (req: Request, res: Response): Promise<Respon
     }
 
     await connection.beginTransaction();
+    
+    // ✅ CHECK FOR REJECTED, PENDING, OR ACCEPTED OFFERS
+    const offerCheck = await checkOffer(connection, employer_id, employee_id);
 
-    // 1. Insert into hires table
+    // Check the result
+    if (!offerCheck.canHire) {
+      await connection.rollback();
+      return res.status(409).json({
+        success: false,
+        message: offerCheck.message,
+        status: offerCheck.status,
+        hire_id: offerCheck.hire_id,
+        rejectedHires: offerCheck.rejectedHires,
+        pendingHires: offerCheck.pendingHires,
+        acceptedHires: offerCheck.acceptedHires
+      });
+    }
+
+    // 1. Insert into hires table (only if no existing record)
     const [hireResult] = await connection.execute<ResultSetHeader>(
       `INSERT INTO hires (
         employer_id, 

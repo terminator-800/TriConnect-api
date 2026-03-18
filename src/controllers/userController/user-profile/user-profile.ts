@@ -25,6 +25,7 @@ export interface JobseekerProfile {
   government_id?: string;
   selfie_with_id?: string;
   nbi_barangay_clearance?: string;
+  resume?: string | null;
 }
 
 export interface BusinessEmployerProfile {
@@ -149,7 +150,7 @@ export const getUserProfile = async (
       logger.warn('Profile not found', { user_id, role, ip });
       return response.status(404).json({ error: 'Profile not found' });
     }
-
+    
     return response.status(200).json(userProfile);
   } catch (error: any) {
     logger.error('Failed to fetch user profile', {

@@ -42,10 +42,10 @@ export const handleMessageUpload = async (
       full_name,
       phone_number,
       email_address,
-      current_address,
+      // current_address,
       job_title,
       employer_name,
-      company_name,
+      // company_name,
       project_location,
       start_date,
       end_date,
@@ -56,24 +56,26 @@ export const handleMessageUpload = async (
       express_message
     } = params;
     console.log(
-      sender_id,
-      receiver_id,
-      message,
-      cover_letter,
-      full_name,
-      phone_number,
-      email_address,
-      current_address,
-      job_title,
-      employer_name,
-      company_name,
-      project_location,
-      start_date,
-      end_date,
-      project_description,
-      resume,
-      files,
-      hire_message,
+      "HANDLE MESSAGE UPLOAD PARAMETERS:"
+      ,
+      // sender_id,
+      // receiver_id,
+      // message,
+      // cover_letter,
+      // full_name,
+      // phone_number,
+      // email_address,
+      // current_address,
+      // job_title,
+      // employer_name,
+      // company_name,
+      // project_location,
+      // start_date,
+      // end_date,
+      // project_description,
+      // resume,
+      // files,
+      // hire_message,
       express_message
     );
 
@@ -116,68 +118,73 @@ export const handleMessageUpload = async (
     const userSocketMap = req.app.get('userSocketMap');
     const socketId = userSocketMap[sender_id];
    
-     console.log( conversation_id,
-         "SENDER ID: ", sender_id,
-          "RECEIVER ID:",receiver_id,
-          "EMPLOYER NAME:",employer_name,
-          "COMPANY NAME: ",company_name,
-          "PHONE NUMBER: ",phone_number,
-          "EMAIL ADDRESS: ",email_address,
-          "PROJECT LOCATION: ",project_location,
-          "DATE: ", formattedStartDate,
-          "PROJECT LOCATION: ",project_description,
-          "JOB TITLE",job_title,
+     console.log( 
+        //   conversation_id,
+        //  "SENDER ID: ", sender_id,
+        //   "RECEIVER ID:",receiver_id,
+          // "EMPLOYER NAME:",employer_name,
+          // "COMPANY NAME: ",company_name,
+          // "PHONE NUMBER: ",phone_number,
+          // "EMAIL ADDRESS: ",email_address,
+          // "PROJECT LOCATION: ",project_location,
+          // "DATE: ", formattedStartDate,
+          // "PROJECT LOCATION: ",project_description,
+          // "JOB TITLE",job_title,
     );
    // FOR JOB APPLICATION 
-    if (full_name && current_address && cover_letter && resume) {
+    if ( cover_letter && resume) {
       await connection.query(
         `INSERT INTO messages (
-          conversation_id, sender_id, receiver_id,
-          full_name, phone_number, email_address, current_address, cover_letter, resume, job_title,
-          message_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          conversation_id, 
+          sender_id, 
+          receiver_id,
+          cover_letter, 
+          resume, 
+          message_type,
+          job_title
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           conversation_id,
           sender_id,
           receiver_id,
-          full_name ?? null,
-          phone_number ?? null,
-          email_address ?? null,
-          current_address ?? null,
+          // full_name ?? null,
+          // phone_number ?? null,
+          // email_address ?? null,
+          // current_address ?? null,
           cover_letter ?? null,
           resume ? resume.path.replace(/\\/g, '/') : null,
-          job_title ?? null,
           'apply',
+          job_title ?? null,
         ]
       );
-          try {
-            if (socketId) {
-              io.to(socketId).emit('notification', {
-                title: 'NEW APPLICATION',
-                message: `${full_name} applied for ${job_title}. Check your messages for details.`,
-                type: 'job_application',
-                notifier_id: sender_id,
-                created_at: new Date(),
-              });
-            }
-          } catch (socketError) {
-            console.error('Failed to emit socket notification', { 
-              sender_id, 
-              socketError 
-            });
-          }
+          // try {
+          //   if (socketId) {
+          //     io.to(socketId).emit('notification', {
+          //       title: 'NEW APPLICATION',
+          //       message: `${full_name} applied for ${job_title}. Check your messages for details.`,
+          //       type: 'job_application',
+          //       notifier_id: sender_id,
+          //       created_at: new Date(),
+          //     });
+          //   }
+          // } catch (socketError) {
+          //   console.error('Failed to emit socket notification', { 
+          //     sender_id, 
+          //     socketError 
+          //   });
+          // }
       
           await notifyUser(
             receiver_id,
             'NEW APPLICATION',
-            `${full_name} applied for ${job_title}. Check your messages for details.`,
+            `Someone applied for a job. Check your messages for details.`,
             'job_application',
             sender_id
           );
     }
+
     // FOR HIRE REQUEST
     // NAA NANI NOTIF
-    
     else if (start_date && end_date && hire_message) {
       await connection.query(
         `INSERT INTO messages (
@@ -202,30 +209,32 @@ export const handleMessageUpload = async (
 
     // FOR REQUEST BUSINESS EMPLOYER
     // NO NOTIF YET
-    else if (employer_name && company_name && project_location && project_description) {
-      await connection.query(
-        `INSERT INTO messages (
-          conversation_id, sender_id, receiver_id,
-          employer_name, company_name, phone_number, email_address,
-          project_location, start_date, project_description, job_title,
-          message_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          conversation_id,
-          sender_id,
-          receiver_id,
-          employer_name ?? null,
-          company_name ?? null,
-          phone_number ?? null,
-          email_address ?? null,
-          project_location ?? null,
-          formattedStartDate,
-          project_description ?? null,
-          job_title ?? null,
-          'request',
-        ]
-      );
-    } 
+    // else if (employer_name && company_name && project_location && project_description) {
+    //   await connection.query(
+    //     `INSERT INTO messages (
+    //       conversation_id, sender_id, receiver_id,
+    //       employer_name, company_name, phone_number, email_address,
+    //       project_location, start_date, project_description, job_title,
+    //       message_type
+    //     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    //     [
+    //       conversation_id,
+    //       sender_id,
+    //       receiver_id,
+    //       employer_name ?? null,
+    //       company_name ?? null,
+    //       phone_number ?? null,
+    //       email_address ?? null,
+    //       project_location ?? null,
+    //       formattedStartDate,
+    //       project_description ?? null,
+    //       job_title ?? null,
+    //       'request',
+    //     ]
+    //   );
+    // } 
+
+    
     // REQUEST FOR INDIVIDUAL EMPLOYER
     // NO NOTIF YET
       else if (employer_name && project_location && project_description) {
@@ -233,9 +242,9 @@ export const handleMessageUpload = async (
         `INSERT INTO messages (
           conversation_id, sender_id, receiver_id,
           employer_name, phone_number, email_address,
-          project_location, start_date, project_description, job_title,
+          project_location, start_date, project_description,
           message_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           conversation_id,
           sender_id,
@@ -246,7 +255,7 @@ export const handleMessageUpload = async (
           project_location ?? null,    
           formattedStartDate ?? null,  
           project_description ?? null, 
-          job_title ?? null,           
+          // job_title ?? null,           
           'request',                   
         ]
       );
