@@ -48,7 +48,7 @@ export const login = async (request: CustomRequest, response: Response) => {
     }
 
     // FOR HIRED RESETTING EMPLOYMENT STATUS
-    await refreshEmploymentStatus(user.user_id);
+    // await refreshEmploymentStatus(user.user_id);
 
     // Create JWT token
     const token = jwt.sign(
