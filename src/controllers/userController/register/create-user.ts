@@ -56,6 +56,6 @@ export async function createUsers(
     return { success: true, user_id: userId };
   } catch (error) {
     logger.error('Error creating user', { error, email, role });
-    return { success: false, error };
+        throw error; 
   }
 }
