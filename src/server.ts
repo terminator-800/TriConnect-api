@@ -41,6 +41,11 @@ import { createReportProofsTable } from './schema/report-proof-schema.js';
 import { createFeedbackTable } from './schema/feedback-schema.js';
 import { createNotificationTable } from './schema/notification-schema.js';
 import { createHiresTable } from './schema/hires-schema.js';
+import {
+  createManpowerTeamMemberTable,
+  ensureManpowerTeamMemberPendingStatusEnum,
+} from './schema/manpower-team-member-schema.js';
+import { createManpowerDeploymentTables } from './schema/manpower-deployment-schema.js';
 // Routes
 import jobseekerRoute from './routes/jobseeker-route.js';
 import businessEmployerRoute from './routes/business-employer-route.js';
@@ -92,7 +97,10 @@ async function startServer() {
     await createNotificationTable(connection);
     await createAdministrator();
     await createHiresTable(connection);
-    
+    await createManpowerTeamMemberTable(connection);
+    await ensureManpowerTeamMemberPendingStatusEnum(connection);
+    await createManpowerDeploymentTables(connection);
+
     app.locals.db = connection;
 
     const port = process.env.API_PORT || 3001;

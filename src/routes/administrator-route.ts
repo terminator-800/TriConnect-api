@@ -19,6 +19,8 @@ import { getNotified } from '../controllers/userController/notification/get-noti
 import { markNotificationSeen } from '../controllers/userController/notification/seen-notification.js';
 import { getSuccessfulHires } from '../controllers/administrator-controller/get-successful-hires/get-successful-hires.js';
 import { getEnrolledEmployers } from '../controllers/administrator-controller/get-enrolled-employers.js';
+import { approveDeployment } from '../controllers/administrator-controller/approve-deployment/approve-deployment.js';
+import { getPendingDeployments } from '../controllers/administrator-controller/pending-deployments/pending-deployments.js';
 
 const router = express.Router();
 
@@ -45,4 +47,6 @@ router.patch(
 );
 router.get('/administrator/successful-hires', authenticate, getSuccessfulHires);
 router.get('/administrator/enrolled-employers', authenticate, getEnrolledEmployers);
+router.put('/administrator/approve/deployment/:deployment_id', authenticate, approveDeployment);
+router.get('/administrator/deployments/pending', authenticate, getPendingDeployments);
 export default router;

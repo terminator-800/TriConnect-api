@@ -8,6 +8,7 @@ import type { Request } from 'express';
 import type { AuthenticatedUser } from '../types/express/auth.js';
 import { ROLE } from '../utils/roles.js';
 import type { CustomRequest } from '../types/express/auth.js';
+import type { AuthenticatedRequest } from './authenticate.js';
 type Role = (typeof ROLE)[keyof typeof ROLE];
 
 // === Directory Setup ===
@@ -134,6 +135,39 @@ const reportUpload = multer({ storage: reportStorage, fileFilter: imageOnlyFilte
   'proof_files',
   5
 );
+
+const deploymentReceiptFilter = (req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+  const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+  if (!allowed.includes(file.mimetype)) {
+    return cb(new Error('Only JPG, PNG, or PDF files are allowed for the payment receipt.'));
+  }
+  cb(null, true);
+};
+
+const deploymentReceiptStorage = multer.diskStorage({
+  destination: (req: Request, _file, cb) => {
+    try {
+      const userId = (req as AuthenticatedRequest).user?.user_id;
+      if (!userId) return cb(new Error('Unauthorized: No user ID'), '');
+
+      const dir = path.join(baseUploadDir, ROLE.MANPOWER_PROVIDER, String(userId), 'deployments', '_temp');
+      fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    } catch {
+      cb(new Error('Failed to prepare receipt upload folder'), undefined as unknown as string);
+    }
+  },
+  filename: (_req, file, cb) => {
+    const uniqueName = `tmp-${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  },
+});
+
+const deploymentReceiptUpload = multer({
+  storage: deploymentReceiptStorage,
+  fileFilter: deploymentReceiptFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+}).single('receipt');
 
 // === Role-specific Upload Middleware ===
 const jobseekerUpload = multer({
@@ -299,6 +333,7 @@ export {
   uploadManpowerProviderFiles,
   chatImageUpload,
   reportUpload,
+  deploymentReceiptUpload,
   changeUserProfile,
   uploadResume
 };

@@ -35,13 +35,29 @@ import { manpowerProviderDashboard } from '../controllers/userController/manpowe
 // import { rejectApplicant } from '../controllers/userController/hire-reject-applicant/reject-applicant.js';
 import { acceptEmployerHandler } from '../controllers/userController/accept-reject-employer/accept-employer.js';
 import { declineEmployerHandler } from '../controllers/userController/accept-reject-employer/decline-employer.js';
+import { getTeamMembers } from '../controllers/userController/team-member/get-team-members.js';
+import { addTeamMember } from '../controllers/userController/team-member/add-team-member.js';
+import { submitDeployment } from '../controllers/userController/deployment/submit-deployment.js';
+import { getDeployments } from '../controllers/userController/deployment/get-deployments.js';
+import { deploymentReceiptUpload } from '../middleware/upload-files.js';
+import type { Request, Response, NextFunction } from 'express';
 
 const router = express.Router();
+
+const deploymentReceiptUploadMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  deploymentReceiptUpload(req, res, (err: unknown) => {
+    if (err) {
+      const message = err instanceof Error ? err.message : 'Invalid receipt upload.';
+      return res.status(400).json({ error: message });
+    }
+    next();
+  });
+};
 
 router.post('/register/manpower-provider', validateRegisterInput, registerUser);
 router.get('/manpower-provider/verify', verifyEmail);
 router.get('/manpower-provider/profile', authenticate, getUserProfile);
-router.post('/manpower-provider/upload-requirements', uploadManpowerProviderFiles, uploadRequirement);
+router.post('/manpower-provider/upload-requirements', authenticate, uploadManpowerProviderFiles, uploadRequirement);
 router.post('/manpower-provider/job-post', authenticate, createJobPost);
 router.post('/manpower-provider/applications', authenticate, chatImageUpload, apply);
 router.post('/manpower-provider/messages/send', authenticate, chatImageUpload, replyMessage);
@@ -69,5 +85,14 @@ router.post('/manpower-provider/hire-applicant', authenticate, hireApplicant);
 // router.patch('/manpower-provider/job-application/:application_id/reject', authenticate, rejectApplicant);
 router.post('/manpower-provider/accept-employer', authenticate, acceptEmployerHandler);
 router.post('/manpower-provider/decline-employer', authenticate, declineEmployerHandler);
+router.get('/manpower-provider/team-members', authenticate, getTeamMembers);
+router.post('/manpower-provider/team-members', authenticate, addTeamMember);
+router.get('/manpower-provider/deployments', authenticate, getDeployments);
+router.post(
+  '/manpower-provider/deployments',
+  authenticate,
+  deploymentReceiptUploadMiddleware,
+  submitDeployment
+);
 
 export default router;
