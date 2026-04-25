@@ -41,6 +41,7 @@ import { submitDeployment } from '../controllers/userController/deployment/submi
 import { getDeployments } from '../controllers/userController/deployment/get-deployments.js';
 import { deploymentReceiptUpload } from '../middleware/upload-files.js';
 import type { Request, Response, NextFunction } from 'express';
+import { respondFinalAgreement } from '../controllers/userController/final-agreement/respond-final-agreement.js';
 
 const router = express.Router();
 
@@ -85,6 +86,7 @@ router.post('/manpower-provider/hire-applicant', authenticate, hireApplicant);
 // router.patch('/manpower-provider/job-application/:application_id/reject', authenticate, rejectApplicant);
 router.post('/manpower-provider/accept-employer', authenticate, acceptEmployerHandler);
 router.post('/manpower-provider/decline-employer', authenticate, declineEmployerHandler);
+router.post('/manpower-provider/final-agreement/respond', authenticate, respondFinalAgreement);
 router.get('/manpower-provider/team-members', authenticate, getTeamMembers);
 router.post('/manpower-provider/team-members', authenticate, addTeamMember);
 router.get('/manpower-provider/deployments', authenticate, getDeployments);

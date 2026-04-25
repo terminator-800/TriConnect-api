@@ -29,6 +29,7 @@ import { getNotified } from '../controllers/userController/notification/get-noti
 import { markNotificationSeen } from '../controllers/userController/notification/seen-notification.js';
 import { apply } from '../controllers/userController/apply/apply-job-post.js';
 import { hireApplicant } from '../controllers/userController/hire-reject-applicant/hire-applicant.js';
+import { sendFinalAgreement } from '../controllers/userController/final-agreement/send-final-agreement.js';
 // import { rejectApplicant } from '../controllers/userController/hire-reject-applicant/reject-applicant.js';
 
 const router = express.Router();
@@ -58,6 +59,7 @@ router.put('/individual-employer/edit-job-post/:job_post_id', authenticate, edit
 router.get('/individual-employer/notification', authenticate, getNotified);
 router.post('/individual-employer/requests', authenticate, apply);
 router.post('/individual-employer/hire-applicant', authenticate, hireApplicant);
+router.post('/individual-employer/final-agreement', authenticate, sendFinalAgreement);
 // router.patch('/individual-employer/job-application/:application_id/reject', authenticate, rejectApplicant);
 
 export default router;

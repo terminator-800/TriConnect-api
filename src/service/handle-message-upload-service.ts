@@ -242,9 +242,9 @@ export const handleMessageUpload = async (
         `INSERT INTO messages (
           conversation_id, sender_id, receiver_id,
           employer_name, phone_number, email_address,
-          project_location, start_date, project_description,
+          project_location, start_date, project_description, request_status,
           message_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           conversation_id,
           sender_id,
@@ -255,6 +255,7 @@ export const handleMessageUpload = async (
           project_location ?? null,    
           formattedStartDate ?? null,  
           project_description ?? null, 
+          'pending',
           // job_title ?? null,           
           'request',                   
         ]
