@@ -17,6 +17,10 @@ interface ApplicantRow extends RowDataPacket {
   applicant_name: string;
   location: string | null;
   email: string;
+  profile: string | null;
+  resume: string | null;
+  phone: string | null;
+  conversation_id: number | null;
 }
 
 interface ApplicantsResult {
@@ -34,6 +38,10 @@ interface ApplicantsResult {
     applicant_name: string;
     location: string;
     email: string;
+      profile: string | null;
+      resume: string | null;
+      phone: string | null;
+      conversation_id: number | null;
   }[];
 }
 
@@ -63,6 +71,9 @@ export async function getApplicantsByEmployer(
       u.user_id AS applicant_user_id,
       u.role AS applicant_role,
       u.email,
+      u.profile,
+      js.resume,
+      js.phone,
       jp.job_title,
       CASE 
         WHEN u.role = 'jobseeker' THEN js.full_name
@@ -129,6 +140,9 @@ export async function getApplicantsByEmployer(
         applicant_name: row.applicant_name,
         location: row.location || '-',
         email: row.email,
+        profile: row.profile,
+        resume: row.resume,
+        phone: row.phone,
         conversation_id: row.conversation_id,
       })),
     };
